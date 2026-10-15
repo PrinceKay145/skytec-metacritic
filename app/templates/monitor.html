@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Monitor · Metacritic games{% endblock %}
+{% block content %}
+<h1>Crawler monitor</h1>
+<p class="muted">{{ games_total }} games in the catalog, {{ games_today }} processed today (UTC).</p>
+
+<h2>Latest run</h2>
+<section id="latest" aria-live="polite" hx-get="/api/runs/latest" hx-trigger="every 3s">
+  {% include "_latest_run.html" %}
+</section>
+
+<h2>Recent runs</h2>
+<table class="runs">
+  <thead>
+    <tr><th scope="col">Run</th><th scope="col">Status</th><th scope="col">Started (UTC)</th><th scope="col">Duration</th><th scope="col">Games</th><th scope="col">Errors</th></tr>
+  </thead>
+  <tbody>
+    {% for run in runs %}
+    <tr>
+      <td>#{{ run.id }}</td>
+      <td><span class="status status-{{ run.status }}">{{ run.status }}</span></td>
+      <td>{{ run.started_at.strftime("%Y-%m-%d %H:%M") }}</td>
+      <td>{% if run.finished_at %}{{ (run.finished_at - run.started_at).total_seconds() | round | int }}s{% else %}…{% endif %}</td>
+      <td>{{ run.processed }}</td>
+      <td>
+        {% if run.error_log %}
+        <details>
+          <summary>{{ run.errors }}</summary>
+          <ul class="errors">
+            {% for error in run.error_log | reverse %}
+            <li><strong>{{ error.source }}</strong> {{ error.message }}{% if error.url %} · <a href="{{ error.url }}" target="_blank" rel="noopener">url</a>{% endif %}</li>
+            {% endfor %}
+          </ul>
+        </details>
+        {% else %}0{% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="muted">No runs yet</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

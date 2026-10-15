@@ -2,7 +2,7 @@ import datetime as dt
 from datetime import UTC, datetime
 from enum import StrEnum, auto
 
-from sqlalchemy import JSON, ForeignKey, LargeBinary, Text, UniqueConstraint
+from sqlalchemy import JSON, ForeignKey, Index, LargeBinary, Text, UniqueConstraint, text
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -88,6 +88,16 @@ class ReviewSummary(Base):
 
 class CrawlRun(Base):
     __tablename__ = "crawl_runs"
+    # the lock between scheduled and manual runs: a second "running" row can't be inserted
+    __table_args__ = (
+        Index(
+            "one_running_crawl",
+            "status",
+            unique=True,
+            sqlite_where=text("status = 'running'"),
+            postgresql_where=text("status = 'running'"),
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     started_at: Mapped[datetime] = mapped_column(default=utcnow)

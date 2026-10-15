@@ -36,8 +36,21 @@ All settings are environment variables, listed with defaults in [.env.example](.
 - `/games/{slug}`: the game card with cover, developer, description, per-platform scores, the
   video link, a link to the game on Metacritic, the critic and player summaries, and up to
   six similar games.
+- `/monitor`: the crawler monitor. The latest run's status, games processed, error count and
+  last errors refresh every 3 seconds (htmx polling `/api/runs/latest`). A **Run now** button
+  sits next to the recent runs, each with its `error_log`.
 - `/health`: checks the app and its database.
 - Unknown pages get an HTML 404 with a link back to the list. Paths under `/api/` get JSON.
+
+## API
+
+| Method | Path | Returns |
+|---|---|---|
+| `GET` | `/api/runs/latest` | The latest run as JSON (`id`, `status`, `processed`, `errors`, `error_log`, times); 404 before the first run |
+| `POST` | `/api/runs` | Starts a crawl in the background and returns `202 {"run_id": N}` at once, or `409` with the running run's id |
+| `GET` | `/health` | `{"status": "ok"}` once the database answers |
+
+Both `/api/runs` routes return an HTML fragment instead when htmx calls them from the monitor.
 
 ## Crawl schedule
 
@@ -45,6 +58,9 @@ All settings are environment variables, listed with defaults in [.env.example](.
 - **The crawl day is the UTC date.** The first run after 00:00 UTC takes the 20 games in
   New Releases. Later runs that day page through "See all, newest first", skipping games
   already processed that day.
+- Only one run at a time, across processes too: a run claims a row in `crawl_runs` with status
+  `running`, and a partial unique index allows only one such row. A scheduled run that finds
+  one already running is skipped, and **Run now** answers 409.
 - A run that fails for one game or one platform logs the error in the run's `error_log` and
   carries on. Runs still marked "running" when the app starts are marked failed.
 

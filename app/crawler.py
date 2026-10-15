@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 
 import httpx
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -28,16 +29,33 @@ BROWSE_URL = "https://www.metacritic.com/browse/game/all/all/all-time/new/"
 log = logging.getLogger(__name__)
 
 
+def claim_run() -> int | None:
+    """Inserts this run's "running" row, or returns None while another run holds it."""
+    with SessionLocal() as session:
+        run = CrawlRun(status=RunStatus.running)
+        session.add(run)
+        try:
+            session.commit()
+        except IntegrityError:
+            return None
+        return run.id
+
+
 def run_crawl(
     client: MetacriticClient | None = None,
     llm: LLM | None = None,
     limit: int = settings.games_per_run,
     max_pages: int = settings.max_pages_per_run,
-) -> CrawlRun:
+    run_id: int | None = None,
+) -> CrawlRun | None:
+    """Crawls under an already claimed run_id, or claims one; skips if another run is going."""
+    if run_id is None:
+        run_id = claim_run()
+        if run_id is None:
+            log.info("crawl skipped: another run is in progress")
+            return None
     with SessionLocal() as session, client or MetacriticClient() as metacritic:
-        run = CrawlRun()
-        session.add(run)
-        session.commit()
+        run = session.get_one(CrawlRun, run_id)
         log.info("crawl run %s started", run.id)
         try:
             _crawl(session, metacritic, llm or OpenAICompatibleLLM(), run, limit, max_pages)

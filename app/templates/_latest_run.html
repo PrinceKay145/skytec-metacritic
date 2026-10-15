@@ -1,0 +1,29 @@
+{% set running = run and run.status == "running" %}
+<div class="run-actions">
+  <form method="post" action="/api/runs" hx-post="/api/runs" hx-target="#latest">
+    <button type="submit"{% if running %} disabled{% endif %}>{{ "Running…" if running else "Run now" }}</button>
+  </form>
+  {% if note %}<span class="note">{{ note }}</span>{% endif %}
+</div>
+{% if run %}
+<p class="run-head">
+  <span class="status status-{{ run.status }}">{{ run.status }}</span>
+  <strong>Run #{{ run.id }}</strong>
+  <span class="muted">started {{ run.started_at.strftime("%Y-%m-%d %H:%M:%S") }} UTC{% if run.finished_at %}, took {{ (run.finished_at - run.started_at).total_seconds() | round | int }}s{% endif %}</span>
+</p>
+<dl class="stats">
+  <div><dt>Games processed</dt><dd>{{ run.processed }}</dd></div>
+  <div><dt>Errors</dt><dd>{{ run.errors }}</dd></div>
+  <div><dt>Next scheduled run</dt><dd>{{ next_run.strftime("%H:%M UTC") if next_run else "scheduler off" }}</dd></div>
+</dl>
+{% if run.error_log %}
+<h3>Last errors</h3>
+<ul class="errors">
+  {% for error in (run.error_log | reverse | list)[:5] %}
+  <li><strong>{{ error.source }}</strong> {{ error.message }}{% if error.url %} · <a href="{{ error.url }}" target="_blank" rel="noopener">url</a>{% endif %}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% else %}
+<p class="muted">No runs yet. Press "Run now" or wait for the scheduler.</p>
+{% endif %}

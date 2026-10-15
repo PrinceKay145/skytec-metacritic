@@ -5,7 +5,7 @@ import httpx
 import pytest
 from sqlalchemy import func, select
 
-from app.crawler import run_crawl
+from app.crawler import claim_run, run_crawl
 from app.db import SessionLocal
 from app.metacritic import API_URL, BROWSE_PAGE_SIZE, MetacriticClient
 from app.models import (
@@ -59,7 +59,7 @@ class FakeMetacritic:
         http = httpx.Client(transport=httpx.MockTransport(self), base_url=API_URL)
         return MetacriticClient(http, delay=0, backoff=0)
 
-    def crawl(self, llm: "FakeLLM | None" = None, **kwargs: int) -> CrawlRun:
+    def crawl(self, llm: "FakeLLM | None" = None, **kwargs: int) -> CrawlRun | None:
         return run_crawl(self.client(), llm or FakeLLM(), **kwargs)
 
 
@@ -325,3 +325,17 @@ def test_missing_embed_model_is_logged_once_and_skipped() -> None:
     assert len(llm.embedded) == 1
     with SessionLocal() as session:
         assert session.scalars(select(Game.embedding_model)).all() == [None, None]
+
+
+def test_only_one_run_can_hold_the_running_lock() -> None:
+    first = claim_run()
+    assert first is not None
+    assert claim_run() is None
+    assert FakeMetacritic(["a"], []).crawl(limit=1) is None
+    with SessionLocal() as session:
+        assert session.scalar(select(func.count()).select_from(CrawlRun)) == 1
+
+    run = FakeMetacritic(["a"], []).crawl(limit=1, run_id=first)
+    assert run is not None
+    assert (run.id, run.status, run.processed) == (first, RunStatus.success, 1)
+    assert claim_run() is not None

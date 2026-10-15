@@ -20,7 +20,9 @@
     body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
     a { color: var(--accent); }
     header.site { border-bottom: 1px solid var(--border); background: var(--surface); }
-    header.site a { display: block; max-width: 1120px; margin: 0 auto; padding: .8rem 1rem; font-weight: 700; color: var(--text); text-decoration: none; }
+    header.site nav { display: flex; gap: 1.25rem; align-items: baseline; max-width: 1120px; margin: 0 auto; padding: .8rem 1rem; }
+    header.site a { color: var(--muted); text-decoration: none; }
+    header.site a.brand { font-weight: 700; color: var(--text); }
     main { max-width: 1120px; margin: 0 auto; padding: 1rem; }
     h1 { margin: 0 0 .25rem; line-height: 1.2; }
     .muted { color: var(--muted); }
@@ -63,10 +65,26 @@
     .summary { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: .25rem 1.1rem 1rem; }
     .summary h4 { margin: .8rem 0 .2rem; }
     .summary ul { margin: 0; padding-left: 1.2rem; }
+
+    .run-actions { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-bottom: .75rem; }
+    .run-actions button { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    .run-actions button:disabled { opacity: .55; cursor: default; }
+    .status { display: inline-block; padding: .1rem .55rem; border-radius: 999px; font-size: .8rem; font-weight: 600; color: #fff; }
+    .status-running { background: var(--accent); }
+    .status-success { background: var(--good); }
+    .status-failed { background: var(--bad); }
+    .run-head { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+    .stats { display: flex; flex-wrap: wrap; gap: 1rem; margin: 0 0 1rem; }
+    .stats div { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: .6rem 1rem; min-width: 150px; }
+    .stats dt { font-size: .8rem; color: var(--muted); }
+    .stats dd { margin: 0; font-size: 1.5rem; font-weight: 700; }
+    .errors { padding-left: 1.2rem; font-size: .85rem; overflow-wrap: anywhere; }
+    .note { background: var(--surface); border-left: 3px solid var(--accent); padding: .4rem .8rem; }
+    .runs { width: 100%; font-size: .9rem; }
   </style>
 </head>
 <body>
-  <header class="site"><a href="/">Metacritic games</a></header>
+  <header class="site"><nav><a class="brand" href="/">Metacritic games</a><a href="/monitor">Monitor</a></nav></header>
   <main>{% block content %}{% endblock %}</main>
 </body>
 </html>
