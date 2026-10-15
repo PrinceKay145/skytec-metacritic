@@ -1,0 +1,15 @@
+{% macro metascore(value) -%}
+{%- if value is none -%}
+<span class="score score-none" title="No Metascore yet">tbd</span>
+{%- else -%}
+<span class="score {{ 'score-good' if value >= 75 else 'score-mixed' if value >= 50 else 'score-bad' }}" title="Metascore">{{ value }}</span>
+{%- endif -%}
+{%- endmacro %}
+
+{% macro userscore(value) -%}
+{%- if value is none -%}
+<span class="score score-user score-none" title="No user score yet">tbd</span>
+{%- else -%}
+<span class="score score-user {{ 'score-good' if value >= 7.5 else 'score-mixed' if value >= 5 else 'score-bad' }}" title="User score">{{ '%.1f' | format(value) }}</span>
+{%- endif -%}
+{%- endmacro %}

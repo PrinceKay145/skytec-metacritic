@@ -1,12 +1,28 @@
 {% extends "base.html" %}
 {% block content %}
-{% if games %}
-<ul>
-  {% for game in games %}
-  <li>{{ game.title }}{% if game.developer %} — {{ game.developer }}{% endif %}</li>
-  {% endfor %}
-</ul>
-{% else %}
-<p>No games yet.</p>
-{% endif %}
+<form class="filters" method="get" action="/" role="search"
+      hx-get="/" hx-target="#results" hx-push-url="true" hx-trigger="input delay:300ms, submit">
+  <label>Search
+    <input type="search" name="q" value="{{ q }}" placeholder="Game title" autocomplete="off">
+  </label>
+  <label>Platform
+    <select name="platform">
+      <option value="">All platforms</option>
+      {% for name in platforms %}
+      <option{% if name == platform %} selected{% endif %}>{{ name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Sort by
+    <select name="sort">
+      {% for key, label in sorts.items() %}
+      <option value="{{ key }}"{% if key == sort %} selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <noscript><button type="submit">Apply</button></noscript>
+</form>
+<section id="results" aria-live="polite">
+  {% include "_results.html" %}
+</section>
 {% endblock %}

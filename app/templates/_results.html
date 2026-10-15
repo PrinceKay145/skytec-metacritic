@@ -1,0 +1,10 @@
+<p class="count">{{ total }} game{{ '' if total == 1 else 's' }}{% if platform %} on {{ platform }}{% endif %}</p>
+{% if rows %}
+<ul class="grid">
+  {% include "_cards.html" %}
+</ul>
+{% elif q or platform %}
+<p>No games match these filters.</p>
+{% else %}
+<p>No games yet. The first crawl starts when the app starts.</p>
+{% endif %}

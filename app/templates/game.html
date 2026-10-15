@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from "_macros.html" import metascore, userscore %}
+{% block title %}{{ game.title }} · Metacritic games{% endblock %}
+{% block content %}
+<p><a href="/">← All games</a></p>
+<article class="game">
+  {% if game.cover_url %}
+  <img class="cover" src="{{ game.cover_url }}" alt="{{ game.title }} cover" referrerpolicy="no-referrer">
+  {% else %}
+  <div class="cover" aria-hidden="true"></div>
+  {% endif %}
+  <div>
+    <h1>{{ game.title }}</h1>
+    <p class="muted">{% if game.developer %}Developer: {{ game.developer }}{% else %}Developer unknown{% endif %}</p>
+    <table>
+      <thead><tr><th scope="col">Platform</th><th scope="col">Metascore</th><th scope="col">User score</th></tr></thead>
+      <tbody>
+        {% for score in scores %}
+        <tr><th scope="row">{{ score.platform }}</th><td>{{ metascore(score.metascore) }}</td><td>{{ userscore(score.userscore) }}</td></tr>
+        {% else %}
+        <tr><td colspan="3" class="muted">No platforms yet</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p>
+      {% if game.video_url %}<a href="{{ game.video_url }}" target="_blank" rel="noopener">Watch video</a>{% else %}<span class="muted">No video</span>{% endif %}
+      · <a href="https://www.metacritic.com/game/{{ game.slug }}/" target="_blank" rel="noopener">Metacritic page</a>
+    </p>
+    {% if game.description %}
+    <h2>About</h2>
+    <p class="description">{{ game.description }}</p>
+    {% endif %}
+  </div>
+</article>
+
+<h2>What reviewers say</h2>
+<div class="summaries">
+  {% for source in sources %}
+  {% set summary = summaries.get(source) %}
+  <section class="summary">
+    <h3>{{ "Critics" if source == "critic" else "Players" }}</h3>
+    {% if summary %}
+    <h4>Likes</h4>
+    <ul>{% for point in summary.likes.splitlines() %}<li>{{ point }}</li>{% else %}<li class="muted">Nothing stood out</li>{% endfor %}</ul>
+    <h4>Dislikes</h4>
+    <ul>{% for point in summary.dislikes.splitlines() %}<li>{{ point }}</li>{% else %}<li class="muted">Nothing stood out</li>{% endfor %}</ul>
+    <p class="muted small">AI summary of the latest {{ source }} reviews, updated {{ summary.updated_at.strftime("%Y-%m-%d") }}</p>
+    {% else %}
+    <p class="muted">No {{ source }} reviews yet.</p>
+    {% endif %}
+  </section>
+  {% endfor %}
+</div>
+<p class="muted small">Last updated {{ game.updated_at.strftime("%Y-%m-%d %H:%M") }} UTC</p>
+{% endblock %}

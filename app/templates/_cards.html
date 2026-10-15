@@ -1,0 +1,25 @@
+{% from "_macros.html" import metascore, userscore %}
+{% for game, meta, user in rows %}
+<li class="card">
+  <a href="/games/{{ game.slug }}">
+    {% if game.cover_url %}
+    <img class="cover" src="{{ game.cover_url }}" alt="" loading="lazy" referrerpolicy="no-referrer">
+    {% else %}
+    <div class="cover" aria-hidden="true"></div>
+    {% endif %}
+    <div class="card-body">
+      <h2>{{ game.title }}</h2>
+      {% if game.developer %}<p class="muted">{{ game.developer }}</p>{% endif %}
+      <p>{{ metascore(meta) }} {{ userscore(user) }}</p>
+      <p class="muted">{{ game.scores | map(attribute="platform") | sort | join(" · ") }}</p>
+    </div>
+  </a>
+</li>
+{% endfor %}
+{% if has_more %}
+<li class="more">
+  {% set next_url = request.url.include_query_params(page=page + 1) %}
+  <a class="button" href="{{ next_url }}" hx-get="{{ next_url }}"
+     hx-target="closest li" hx-swap="outerHTML">Load more</a>
+</li>
+{% endif %}

@@ -26,6 +26,17 @@ make lint
 
 All settings are environment variables, listed with defaults in [.env.example](.env.example).
 
+## Web UI
+
+- `/`: every game with its cover, developer, platforms, Metascore and user score. Search by
+  title, filter by platform and sort by Metascore, user score, recently added or title. The
+  filters update the list in place with [htmx](https://htmx.org) and keep the URL shareable.
+  With a platform selected, the scores shown and sorted on are that platform's; otherwise
+  each game shows its best score across platforms.
+- `/games/{slug}`: the game card with cover, developer, description, per-platform scores, the
+  video link, a link to the game on Metacritic, and the critic and player summaries.
+- `/health`: checks the app and its database.
+
 ## Crawl schedule
 
 - A run starts when the app starts and then every `CRAWL_INTERVAL_MINUTES` (60 by default).
