@@ -13,7 +13,7 @@ from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.crawler import run_crawl
+from app.crawler import fail_stale_runs, run_crawl
 from app.db import Base, engine, get_session
 from app.models import Game
 
@@ -26,6 +26,7 @@ SessionDep = Annotated[Session, Depends(get_session)]
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # shortcut: create_all never alters tables, move to alembic once a deployed schema changes
     Base.metadata.create_all(engine)
+    fail_stale_runs()
     scheduler = BackgroundScheduler()
     scheduler.add_job(
         run_crawl,

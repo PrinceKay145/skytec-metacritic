@@ -50,6 +50,19 @@ def run_crawl(
         return run
 
 
+def fail_stale_runs() -> int:
+    """Close runs left "running" by a process that died; call before the scheduler starts."""
+    with SessionLocal() as session:
+        stale = session.scalars(select(CrawlRun).where(CrawlRun.status == RunStatus.running)).all()
+        for run in stale:
+            log.warning("crawl run %s was interrupted by a restart", run.id)
+            run.record_error("run", "", "process restarted mid-run")
+            run.status = RunStatus.failed
+            run.finished_at = utcnow()
+        session.commit()
+        return len(stale)
+
+
 def _crawl(
     session: Session, metacritic: MetacriticClient, run: CrawlRun, limit: int, max_pages: int
 ) -> None:

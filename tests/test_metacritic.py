@@ -1,3 +1,6 @@
+from datetime import UTC, datetime, timedelta
+from email.utils import format_datetime
+
 import httpx
 import pytest
 
@@ -116,3 +119,33 @@ def test_get_waits_for_backoff_and_rate_limit(monkeypatch: pytest.MonkeyPatch) -
     make_client(httpx.MockTransport(handler), delay=1.0, backoff=2.0).get("/x")
     assert sleeps[0] == 2.0
     assert 0.9 < sleeps[1] <= 1.0
+
+
+def http_date(seconds_from_now: float) -> str:
+    return format_datetime(datetime.now(UTC) + timedelta(seconds=seconds_from_now), usegmt=True)
+
+
+@pytest.mark.parametrize(
+    ("status", "retry_after", "expected"),
+    [
+        (429, "5", 5.0),
+        (503, "120", 10.0),
+        (429, http_date(8), 7.5),
+        (429, None, 2.0),
+        (429, "soon", 2.0),
+        (500, "5", 2.0),
+    ],
+)
+def test_get_honors_retry_after_up_to_max_backoff(
+    monkeypatch: pytest.MonkeyPatch, status: int, retry_after: str | None, expected: float
+) -> None:
+    sleeps: list[float] = []
+    monkeypatch.setattr(metacritic.time, "sleep", sleeps.append)
+    headers = {"Retry-After": retry_after} if retry_after else {}
+    responses = iter([httpx.Response(status, headers=headers), httpx.Response(200, json={})])
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return next(responses)
+
+    make_client(httpx.MockTransport(handler), backoff=2.0, max_backoff=10.0).get("/x")
+    assert sleeps == [pytest.approx(expected, abs=1.0)]

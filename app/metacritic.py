@@ -1,6 +1,8 @@
 import logging
 import time
 from dataclasses import dataclass
+from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 from types import TracebackType
 from typing import Any, NamedTuple, Self
 
@@ -17,6 +19,7 @@ NEW_RELEASES_LIMIT = 20
 BROWSE_PAGE_SIZE = 24
 REVIEW_PAGE_SIZE = {ReviewSource.critic: 10, ReviewSource.user: 50}
 RETRY_STATUSES = {429, 500, 502, 503, 504}
+RETRY_AFTER_STATUSES = {429, 503}
 
 log = logging.getLogger(__name__)
 
@@ -87,6 +90,23 @@ def parse_reviews(data: dict[str, Any]) -> list[Review]:
     ]
 
 
+def retry_after_seconds(response: httpx.Response) -> float | None:
+    value = response.headers.get("Retry-After")
+    if value is None or response.status_code not in RETRY_AFTER_STATUSES:
+        return None
+    try:
+        return max(0.0, float(value))
+    except ValueError:
+        pass
+    try:
+        when = parsedate_to_datetime(value)
+    except (TypeError, ValueError):
+        return None
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=UTC)
+    return max(0.0, (when - datetime.now(UTC)).total_seconds())
+
+
 class MetacriticClient:
     def __init__(
         self,
@@ -94,6 +114,7 @@ class MetacriticClient:
         delay: float = settings.request_delay_seconds,
         retries: int = settings.max_retries,
         backoff: float = settings.retry_backoff_seconds,
+        max_backoff: float = settings.max_backoff_seconds,
     ) -> None:
         self.http = http or httpx.Client(
             base_url=API_URL,
@@ -103,6 +124,7 @@ class MetacriticClient:
         self.delay = delay
         self.retries = retries
         self.backoff = backoff
+        self.max_backoff = max_backoff
         self._last_request = float("-inf")
 
     def __enter__(self) -> Self:
@@ -118,11 +140,13 @@ class MetacriticClient:
 
     def get(self, path: str, params: dict[str, Any] | None = None) -> Any:
         error: httpx.HTTPError | None = None
+        wait = 0.0
         for attempt in range(self.retries + 1):
             if error is not None:
-                log.warning("retrying %s after %s", path, error)
-                time.sleep(self.backoff * 2 ** (attempt - 1))
+                log.warning("retrying %s in %.1fs after %s", path, wait, error)
+                time.sleep(wait)
             self._throttle()
+            retry_after = None
             try:
                 response = self.http.get(path, params=params)
                 response.raise_for_status()
@@ -131,8 +155,12 @@ class MetacriticClient:
                 if exc.response.status_code not in RETRY_STATUSES:
                     raise
                 error = exc
+                retry_after = retry_after_seconds(exc.response)
             except httpx.TransportError as exc:
                 error = exc
+            if retry_after is None:
+                retry_after = self.backoff * 2**attempt
+            wait = min(retry_after, self.max_backoff)
         assert error is not None
         raise error
 
