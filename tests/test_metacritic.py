@@ -134,17 +134,20 @@ def http_date(seconds_from_now: float) -> str:
     [
         (429, "5", 5.0),
         (503, "120", 10.0),
-        (429, http_date(8), 7.5),
+        (429, 8.0, 7.5),
         (429, None, 2.0),
         (429, "soon", 2.0),
         (500, "5", 2.0),
     ],
 )
 def test_get_honors_retry_after_up_to_max_backoff(
-    monkeypatch: pytest.MonkeyPatch, status: int, retry_after: str | None, expected: float
+    monkeypatch: pytest.MonkeyPatch, status: int, retry_after: str | float | None, expected: float
 ) -> None:
     sleeps: list[float] = []
     monkeypatch.setattr(metacritic.time, "sleep", sleeps.append)
+    if isinstance(retry_after, float):
+        # built here, not at collection time; HTTP dates drop the fraction of a second
+        retry_after = http_date(retry_after)
     headers = {"Retry-After": retry_after} if retry_after else {}
     responses = iter([httpx.Response(status, headers=headers), httpx.Response(200, json={})])
 
