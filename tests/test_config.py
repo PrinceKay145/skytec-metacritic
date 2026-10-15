@@ -17,3 +17,11 @@ from app.config import Settings
 )
 def test_database_url_gets_the_psycopg_driver(given: str, expected: str) -> None:
     assert Settings(database_url=given).database_url == expected
+
+
+def test_settings_ignore_case_and_stray_spaces(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("llm_api_key", " sk-or-test ")
+    monkeypatch.setenv("ADMIN_TOKEN", "token\n")
+    settings = Settings()
+    assert settings.llm_api_key == "sk-or-test"
+    assert settings.admin_token == "token"
