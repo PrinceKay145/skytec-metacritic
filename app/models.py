@@ -8,6 +8,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
 
+ERROR_LOG_SIZE = 20
+ERROR_MESSAGE_CHARS = 300
+
 
 def utcnow() -> datetime:
     return datetime.now(UTC)
@@ -87,6 +90,15 @@ class CrawlRun(Base):
     status: Mapped[RunStatus] = mapped_column(default=RunStatus.running)
     processed: Mapped[int] = mapped_column(default=0)
     errors: Mapped[int] = mapped_column(default=0)
+    error_log: Mapped[list[dict[str, str]]] = mapped_column(
+        MutableList.as_mutable(JSON), default=list
+    )
+
+    def record_error(self, source: str, url: str, message: str) -> None:
+        # column defaults are only applied on INSERT, so a fresh run still has None here
+        self.errors = (self.errors or 0) + 1
+        entry = {"source": source, "url": url, "message": message[:ERROR_MESSAGE_CHARS]}
+        self.error_log = [*(self.error_log or []), entry][-ERROR_LOG_SIZE:]
 
 
 class CrawlState(Base):
