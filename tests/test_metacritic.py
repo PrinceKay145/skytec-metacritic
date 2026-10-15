@@ -52,6 +52,10 @@ def test_parse_score() -> None:
     assert parse_score(load_fixture("user_stats")) == 8.4
     assert parse_score(load_fixture("user_stats_unrated")) is None
 
+    too_few_ratings = load_fixture("user_stats")
+    too_few_ratings["data"]["item"].update(score=0, reviewCount=2, sentiment=None)
+    assert parse_score(too_few_ratings) is None
+
 
 def test_parse_reviews() -> None:
     critic = parse_reviews(load_fixture("critic_reviews"))

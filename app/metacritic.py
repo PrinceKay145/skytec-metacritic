@@ -73,8 +73,8 @@ def parse_game(data: dict[str, Any]) -> GameDetails:
 
 def parse_score(data: dict[str, Any]) -> float | None:
     item = data["data"]["item"]
-    # the user stats endpoint reports score 0 when nobody has rated the game yet
-    return item.get("score") if item.get("reviewCount") else None
+    # until there are enough ratings the API sends score 0 with no sentiment; the site shows "tbd"
+    return item.get("score") if item.get("sentiment") else None
 
 
 def parse_reviews(data: dict[str, Any]) -> list[Review]:

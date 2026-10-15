@@ -16,7 +16,7 @@ responses carry `data.totalResults` and `links.{next,prev,first,last}.href`.
 | Browse, all-time, newest | `/finder/metacritic/web?sortBy=-releaseDate&mcoTypeId=13&offset=N&limit=24` | 24 per site page; `limit` max is 50 (51 returns 400). ~181k games |
 | Game details | `/games/metacritic/{slug}/web` | `data.item`: title, description, developer, images, video, platforms, genres |
 | Per-platform Metascore | `/reviews/metacritic/critic/games/{slug}/platform/{platform}/stats/web` | `data.item.score` 0–100, `null` under 4 reviews |
-| Per-platform user score | `/reviews/metacritic/user/games/{slug}/platform/{platform}/stats/web` | `data.item.score` 0–10. Unrated games report `score: 0` with `reviewCount: 0`; the crawler stores `null` |
+| Per-platform user score | `/reviews/metacritic/user/games/{slug}/platform/{platform}/stats/web` | `data.item.score` 0–10. Until there are enough ratings it returns `score: 0` with `sentiment: null` (the site shows "tbd"); the crawler stores `null` |
 | Critic reviews | `/reviews/metacritic/critic/games/{slug}/web?offset=0&limit=10&sort=score` | Server caps pages at 10. Fields: quote, score, publicationName, url, date, platform |
 | User reviews | `/reviews/metacritic/user/games/{slug}/web?offset=0&limit=50&filterBySentiment=all&sort=date` | Up to 50 per page. Fields: id, quote, score, date, author, platform, thumbsUp/Down, spoiler |
 
