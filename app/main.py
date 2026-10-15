@@ -176,12 +176,13 @@ def monitor(request: Request, session: SessionDep) -> HTMLResponse:
         ).all(),
         "games_total": session.scalar(select(func.count()).select_from(Game)),
         "games_today": len(today.processed_slugs) if today else 0,
-        "admin_required": bool(settings.admin_token),
-        "unlock_failed": request.query_params.get("unlock") == "failed",
         "llm_calls_today": llm_calls_today(session),
         "llm_limit": settings.llm_daily_call_limit,
     }
-    return templates.TemplateResponse(request, "monitor.html", context)
+    response = templates.TemplateResponse(request, "monitor.html", context)
+    # Back must refetch, so a page cached before unlocking can't reappear
+    response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 @app.get("/api/runs/latest")
@@ -256,6 +257,8 @@ def _latest_context(request: Request, session: Session) -> dict[str, Any]:
         "next_run": next_run,
         "note": None,
         "can_run": _is_admin(request),
+        "admin_required": bool(settings.admin_token),
+        "unlock_failed": request.query_params.get("unlock") == "failed",
     }
 
 

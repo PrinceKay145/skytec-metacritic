@@ -6,6 +6,18 @@
   </form>
   {% if note %}<span class="note">{{ note }}</span>{% endif %}
 </div>
+{% elif admin_required %}
+{# rendered with the button from the same request, so a stale page can't show both;
+   hx-preserve keeps a half-typed token and the open state across the 3s refresh #}
+<details class="admin" id="admin-unlock" hx-preserve{% if unlock_failed %} open{% endif %}>
+  <summary>Run now needs the admin token</summary>
+  <form method="post" action="/monitor/unlock">
+    <label>Admin token <input type="password" name="token" autocomplete="current-password" required></label>
+    <button type="submit">Unlock</button>
+  </form>
+  {% if unlock_failed %}<p class="note">That token didn't match.</p>{% endif %}
+  <p class="muted small">Crawls run on their own every hour.</p>
+</details>
 {% endif %}
 {% if run %}
 <p class="run-head">

@@ -132,7 +132,9 @@ def test_admin_token_guards_run_now(
     assert unlocked.status_code == 303
     assert "httponly" in unlocked.headers["set-cookie"].lower()
     assert "samesite=strict" in unlocked.headers["set-cookie"].lower()
-    assert 'hx-post="/api/runs"' in client.get("/monitor").text
+    unlocked_page = client.get("/monitor").text
+    assert 'hx-post="/api/runs"' in unlocked_page
+    assert 'action="/monitor/unlock"' not in unlocked_page
     assert client.post("/api/runs").status_code == 202
 
 
@@ -143,3 +145,20 @@ def test_monitor_shows_daily_llm_usage(client: TestClient) -> None:
 
     assert "7 of 400 daily LLM calls used" in client.get("/monitor").text
     assert client.get("/api/runs/latest").json()["llm_calls"] == 7
+
+
+def test_button_and_unlock_form_never_show_together(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The 3s refresh renders both from one request, so a stale page corrects itself."""
+    monkeypatch.setattr(main.settings, "admin_token", "s3cret")
+    page = client.get("/monitor")
+    assert page.headers["cache-control"] == "no-store"
+    assert 'id="admin-unlock" hx-preserve' in page.text
+
+    locked = client.get("/api/runs/latest", headers=HTMX).text
+    assert 'action="/monitor/unlock"' in locked and 'hx-post="/api/runs"' not in locked
+
+    client.post("/monitor/unlock", data={"token": "s3cret"}, follow_redirects=False)
+    unlocked = client.get("/api/runs/latest", headers=HTMX).text
+    assert 'hx-post="/api/runs"' in unlocked and 'action="/monitor/unlock"' not in unlocked
