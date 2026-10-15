@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Not found · Metacritic games{% endblock %}
+{% block content %}
+<h1>{{ "Game not found" if detail == "Game not found" else "Page not found" }}</h1>
+<p class="muted">It may not have been crawled yet, or the link is wrong.</p>
+<p><a href="/">← Back to all games</a></p>
+{% endblock %}

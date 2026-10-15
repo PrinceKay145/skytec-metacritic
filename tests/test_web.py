@@ -122,5 +122,14 @@ def test_game_card_shows_everything(client: TestClient) -> None:
     assert ">95<" in html and ">8.9<" in html and ">tbd<" in html
 
 
-def test_unknown_game_is_404(client: TestClient) -> None:
-    assert client.get("/games/nope").status_code == 404
+def test_unknown_pages_get_an_html_404_and_api_paths_keep_json(client: TestClient) -> None:
+    for path in ("/games/nope", "/nope"):
+        response = client.get(path)
+        assert response.status_code == 404
+        assert response.headers["content-type"].startswith("text/html")
+        assert 'href="/"' in response.text
+    assert "Game not found" in client.get("/games/nope").text
+
+    api = client.get("/api/nope")
+    assert api.status_code == 404
+    assert api.json() == {"detail": "Not Found"}

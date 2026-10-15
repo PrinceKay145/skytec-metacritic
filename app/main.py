@@ -7,10 +7,12 @@ from typing import Annotated, Literal
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse
+from fastapi.exception_handlers import http_exception_handler
+from fastapi.responses import HTMLResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session, selectinload
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.config import settings
 from app.crawler import fail_stale_runs, run_crawl
@@ -53,6 +55,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="Skytec Metacritic", lifespan=lifespan)
+
+
+@app.exception_handler(StarletteHTTPException)
+async def not_found_page(request: Request, exc: StarletteHTTPException) -> Response:
+    if exc.status_code == 404 and not request.url.path.startswith("/api/"):
+        return templates.TemplateResponse(
+            request, "404.html", {"detail": exc.detail}, status_code=404
+        )
+    return await http_exception_handler(request, exc)
 
 
 @app.get("/health")
