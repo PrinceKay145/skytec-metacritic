@@ -14,6 +14,9 @@ services:
 
   app:
     build: .
+    env_file:
+      - path: .env
+        required: false
     environment:
       DATABASE_URL: postgresql+psycopg://metacritic:${POSTGRES_PASSWORD:-metacritic}@db:5432/metacritic
     ports:

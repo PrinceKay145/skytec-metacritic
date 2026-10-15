@@ -1,0 +1,177 @@
+{
+ "data": {
+  "id": 1400627895,
+  "totalResults": 93,
+  "items": [
+   {
+    "quote": "Elden Ring is simply a game that the player naturally adapts to their own style of play. Challenging at times, vicious at others, but mostly incredibly fun. The enjoyable pace makes the hours of play pass by like water, and each path opens up a few more, only to come together again after a fair amount of exploration before the next big reveal. [Issue#318]",
+    "score": 100,
+    "url": "",
+    "date": "2024-01-30",
+    "author": "",
+    "authorSlug": null,
+    "image": null,
+    "publicationName": "LEVEL (Czech Republic)",
+    "publicationSlug": "level-czech-republic",
+    "reviewedProduct": {
+     "id": 1400627895,
+     "type": "games",
+     "title": "Elden Ring",
+     "url": "/game/elden-ring/",
+     "criticScoreSummary": {
+      "url": "/game/elden-ring/critic-reviews/?platform=playstation-5",
+      "score": 96
+     },
+     "platform": {
+      "id": 1500000062,
+      "name": "PlayStation 5"
+     },
+     "gameTaxonomy": {
+      "game": {
+       "id": 1400627895,
+       "name": "Elden Ring"
+      },
+      "platform": {
+       "id": 1500000062,
+       "name": "PlayStation 5"
+      }
+     }
+    },
+    "platform": "PlayStation 5"
+   },
+   {
+    "quote": "Elden Ring serves as a testament to open world video game design. There is a true sense of accomplishment once that rock-hard enemy has been slain and, something that compels a player to relentlessly do it over and over again until they succeed is truly rewarding. The world is humongous and an epitome of how exploration should be encouraged, by intriguing players to see what is over the hill. Elden Ring is an unmissable, must-play, gaming experience with surprises galore.",
+    "score": 90,
+    "url": "http://www.cubed3.com/review/6829/1/elden-ring-playstation-5.html",
+    "date": "2023-06-02",
+    "author": "",
+    "authorSlug": null,
+    "image": null,
+    "publicationName": "Cubed3",
+    "publicationSlug": "cubed3",
+    "reviewedProduct": {
+     "id": 1400627895,
+     "type": "games",
+     "title": "Elden Ring",
+     "url": "/game/elden-ring/",
+     "criticScoreSummary": {
+      "url": "/game/elden-ring/critic-reviews/?platform=playstation-5",
+      "score": 96
+     },
+     "platform": {
+      "id": 1500000062,
+      "name": "PlayStation 5"
+     },
+     "gameTaxonomy": {
+      "game": {
+       "id": 1400627895,
+       "name": "Elden Ring"
+      },
+      "platform": {
+       "id": 1500000062,
+       "name": "PlayStation 5"
+      }
+     }
+    },
+    "platform": "PlayStation 5"
+   },
+   {
+    "quote": "Elden Ring's engaging combat, mythology and dynamite orchestral soundtrack goes a long way to overshadow an aggressive open world that punishes exploration from the beaten path. Fans of the Souls genre are in for a treat, while newcomers will need to persist to reap the benefits.",
+    "score": 80,
+    "url": "https://www.t3.com/reviews/elden-ring-review",
+    "date": "2022-08-11",
+    "author": "",
+    "authorSlug": null,
+    "image": null,
+    "publicationName": "T3",
+    "publicationSlug": "t3",
+    "reviewedProduct": {
+     "id": 1400627895,
+     "type": "games",
+     "title": "Elden Ring",
+     "url": "/game/elden-ring/",
+     "criticScoreSummary": {
+      "url": "/game/elden-ring/critic-reviews/?platform=playstation-5",
+      "score": 96
+     },
+     "platform": {
+      "id": 1500000062,
+      "name": "PlayStation 5"
+     },
+     "gameTaxonomy": {
+      "game": {
+       "id": 1400627895,
+       "name": "Elden Ring"
+      },
+      "platform": {
+       "id": 1500000062,
+       "name": "PlayStation 5"
+      }
+     }
+    },
+    "platform": "PlayStation 5"
+   }
+  ]
+ },
+ "links": {
+  "self": {
+   "href": "https://backend.metacritic.com/reviews/metacritic/critic/games/elden-ring/web?offset=0&limit=10&sort=date"
+  },
+  "prev": {
+   "href": null
+  },
+  "next": {
+   "href": "https://backend.metacritic.com/reviews/metacritic/critic/games/elden-ring/web?offset=10&limit=10&sort=date"
+  },
+  "first": {
+   "href": "https://backend.metacritic.com/reviews/metacritic/critic/games/elden-ring/web?offset=0&limit=10&sort=date"
+  },
+  "last": {
+   "href": "https://backend.metacritic.com/reviews/metacritic/critic/games/elden-ring/web?offset=90&limit=10&sort=date"
+  },
+  "filterOptions": [
+   {
+    "label": "All Reviews",
+    "value": "all",
+    "href": "https://backend.metacritic.com/reviews/metacritic/critic/games/elden-ring/web?offset=0&limit=10&sort=date&filterBySentiment=all"
+   },
+   {
+    "label": "Positive Reviews",
+    "value": "positive",
+    "href": "https://backend.metacritic.com/reviews/metacritic/critic/games/elden-ring/web?offset=0&limit=10&sort=date&filterBySentiment=positive"
+   },
+   {
+    "label": "Mixed Reviews",
+    "value": "neutral",
+    "href": "https://backend.metacritic.com/reviews/metacritic/critic/games/elden-ring/web?offset=0&limit=10&sort=date&filterBySentiment=neutral"
+   },
+   {
+    "label": "Negative Reviews",
+    "value": "negative",
+    "href": "https://backend.metacritic.com/reviews/metacritic/critic/games/elden-ring/web?offset=0&limit=10&sort=date&filterBySentiment=negative"
+   }
+  ],
+  "sortOptions": [
+   {
+    "label": "Metascore",
+    "value": "score",
+    "href": "https://backend.metacritic.com/reviews/metacritic/critic/games/elden-ring/web?offset=0&limit=10&sort=score"
+   },
+   {
+    "label": "Recently Added",
+    "value": "date",
+    "href": "https://backend.metacritic.com/reviews/metacritic/critic/games/elden-ring/web?offset=0&limit=10&sort=date"
+   },
+   {
+    "label": "Publication (A-Z)",
+    "value": "publication",
+    "href": "https://backend.metacritic.com/reviews/metacritic/critic/games/elden-ring/web?offset=0&limit=10&sort=publication"
+   }
+  ]
+ },
+ "meta": {
+  "componentName": null,
+  "componentDisplayName": null,
+  "componentType": null
+ }
+}

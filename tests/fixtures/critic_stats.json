@@ -1,0 +1,25 @@
+{
+ "data": {
+  "item": {
+   "id": null,
+   "max": 100,
+   "score": 96,
+   "reviewCount": 86,
+   "positiveCount": 86,
+   "neutralCount": 0,
+   "negativeCount": 0,
+   "sentiment": "Universal acclaim",
+   "url": "/game/elden-ring/critic-reviews/?platform=playstation-5"
+  }
+ },
+ "links": {
+  "self": {
+   "href": "https://backend.metacritic.com/reviews/metacritic/critic/games/elden-ring/platform/playstation-5/stats/web"
+  }
+ },
+ "meta": {
+  "componentName": null,
+  "componentDisplayName": null,
+  "componentType": null
+ }
+}

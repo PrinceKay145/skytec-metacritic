@@ -1,0 +1,184 @@
+{
+ "data": {
+  "id": "1400627895",
+  "totalResults": 6631,
+  "items": [
+   {
+    "id": "b4d603b2-7d56-49ec-a2c7-a4b7ace06b98",
+    "quote": "Jeu surcôté, scaling du jeu inadmissible, et caméra indigne pour un jeu moderne, je ne comprends que la caméra n'est pas été patché, c'est inadmissible pour le prix des jeux modernes. ",
+    "score": 0,
+    "thumbsUp": null,
+    "thumbsDown": null,
+    "date": "2026-10-13",
+    "author": "JoshZaWarudo",
+    "version": 1791923617732,
+    "spoiler": false,
+    "reviewedProduct": {
+     "id": 1400627895,
+     "type": "games",
+     "title": "Elden Ring",
+     "url": "/game/elden-ring/",
+     "platform": {
+      "id": 1500000128,
+      "name": "PlayStation 5"
+     },
+     "gameTaxonomy": {
+      "family": {
+       "id": 1200497664,
+       "name": "Elden Ring"
+      },
+      "title": {
+       "id": 1300501979,
+       "name": "Elden Ring"
+      },
+      "game": {
+       "id": 1400627895,
+       "name": "Elden Ring"
+      },
+      "platform": {
+       "id": 1500000128,
+       "name": "PlayStation 5"
+      }
+     }
+    },
+    "platform": "PlayStation 5"
+   },
+   {
+    "id": "d79c7318-42fb-4589-8e03-7cfd302319ca",
+    "quote": "One of the greatest games of all time. Absolutely worth completing, even if it seems too difficult. ",
+    "score": 10,
+    "thumbsUp": null,
+    "thumbsDown": null,
+    "date": "2026-10-11",
+    "author": "Azureize",
+    "version": 1791739901365,
+    "spoiler": false,
+    "reviewedProduct": {
+     "id": 1400627895,
+     "type": "games",
+     "title": "Elden Ring",
+     "url": "/game/elden-ring/",
+     "platform": {
+      "id": 1500000128,
+      "name": "PlayStation 5"
+     },
+     "gameTaxonomy": {
+      "family": {
+       "id": 1200497664,
+       "name": "Elden Ring"
+      },
+      "title": {
+       "id": 1300501979,
+       "name": "Elden Ring"
+      },
+      "game": {
+       "id": 1400627895,
+       "name": "Elden Ring"
+      },
+      "platform": {
+       "id": 1500000128,
+       "name": "PlayStation 5"
+      }
+     }
+    },
+    "platform": "PlayStation 5"
+   },
+   {
+    "id": "a229129b-e823-4b7c-8b8c-8479d553e781",
+    "quote": "Awesome game from start to finish, my only issue where some of the main bosses being a bit ass, but beyond that the game is a constant blast to play. Definitely would recommend this game if you want to try something a bit more challenging.",
+    "score": 9,
+    "thumbsUp": null,
+    "thumbsDown": null,
+    "date": "2026-10-10",
+    "author": "chuddyunc",
+    "version": 1791671935156,
+    "spoiler": false,
+    "reviewedProduct": {
+     "id": 1400627895,
+     "type": "games",
+     "title": "Elden Ring",
+     "url": "/game/elden-ring/",
+     "platform": {
+      "id": 1500000128,
+      "name": "PlayStation 5"
+     },
+     "gameTaxonomy": {
+      "family": {
+       "id": 1200497664,
+       "name": "Elden Ring"
+      },
+      "title": {
+       "id": 1300501979,
+       "name": "Elden Ring"
+      },
+      "game": {
+       "id": 1400627895,
+       "name": "Elden Ring"
+      },
+      "platform": {
+       "id": 1500000128,
+       "name": "PlayStation 5"
+      }
+     }
+    },
+    "platform": "PlayStation 5"
+   }
+  ]
+ },
+ "links": {
+  "self": {
+   "href": "https://backend.metacritic.com/reviews/metacritic/user/games/elden-ring/web?offset=0&limit=50&sort=date"
+  },
+  "prev": {
+   "href": null
+  },
+  "next": {
+   "href": "https://backend.metacritic.com/reviews/metacritic/user/games/elden-ring/web?offset=50&limit=50&sort=date"
+  },
+  "first": {
+   "href": "https://backend.metacritic.com/reviews/metacritic/user/games/elden-ring/web?offset=0&limit=50&sort=date"
+  },
+  "last": {
+   "href": "https://backend.metacritic.com/reviews/metacritic/user/games/elden-ring/web?offset=6600&limit=50&sort=date"
+  },
+  "filterOptions": [
+   {
+    "label": "All Reviews",
+    "value": "all",
+    "href": "https://backend.metacritic.com/reviews/metacritic/user/games/elden-ring/web?offset=0&limit=50&sort=date&filterBySentiment=all"
+   },
+   {
+    "label": "Positive Reviews",
+    "value": "positive",
+    "href": "https://backend.metacritic.com/reviews/metacritic/user/games/elden-ring/web?offset=0&limit=50&sort=date&filterBySentiment=positive"
+   },
+   {
+    "label": "Mixed Reviews",
+    "value": "neutral",
+    "href": "https://backend.metacritic.com/reviews/metacritic/user/games/elden-ring/web?offset=0&limit=50&sort=date&filterBySentiment=neutral"
+   },
+   {
+    "label": "Negative Reviews",
+    "value": "negative",
+    "href": "https://backend.metacritic.com/reviews/metacritic/user/games/elden-ring/web?offset=0&limit=50&sort=date&filterBySentiment=negative"
+   }
+  ],
+  "sortOptions": [
+   {
+    "label": "Recently Added",
+    "value": "date",
+    "href": "https://backend.metacritic.com/reviews/metacritic/user/games/elden-ring/web?offset=0&limit=50&sort=date"
+   },
+   {
+    "label": "Score",
+    "value": "score",
+    "href": "https://backend.metacritic.com/reviews/metacritic/user/games/elden-ring/web?offset=0&limit=50&sort=score"
+   }
+  ]
+ },
+ "meta": {
+  "componentName": null,
+  "componentDisplayName": null,
+  "componentType": null
+ }
+}

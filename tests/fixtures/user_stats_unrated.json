@@ -1,0 +1,25 @@
+{
+ "data": {
+  "item": {
+   "id": "1400709655",
+   "max": 10,
+   "score": 0,
+   "reviewCount": 0,
+   "positiveCount": 0,
+   "neutralCount": 0,
+   "negativeCount": 0,
+   "sentiment": null,
+   "url": "/game/enshrouded/user-reviews/?platform=pc"
+  }
+ },
+ "links": {
+  "self": {
+   "href": "https://backend.metacritic.com/reviews/metacritic/user/games/enshrouded/stats/web"
+  }
+ },
+ "meta": {
+  "componentName": null,
+  "componentDisplayName": null,
+  "componentType": null
+ }
+}

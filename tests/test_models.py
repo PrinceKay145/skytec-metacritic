@@ -1,9 +1,8 @@
-from app.db import Base, SessionLocal, engine
+from app.db import SessionLocal
 from app.models import ERROR_LOG_SIZE, ERROR_MESSAGE_CHARS, CrawlRun
 
 
 def test_record_error_keeps_count_and_last_entries() -> None:
-    Base.metadata.create_all(engine)
     run = CrawlRun()
     for n in range(ERROR_LOG_SIZE + 5):
         run.record_error("product", f"https://example.test/{n}", f"boom {n}" + "x" * 1000)

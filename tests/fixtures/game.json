@@ -1,0 +1,273 @@
+{
+ "data": {
+  "item": {
+   "id": 1300501979,
+   "type": "game-title",
+   "typeId": 13,
+   "title": "Elden Ring",
+   "slug": "elden-ring",
+   "mustPlay": true,
+   "premiereYear": 2022,
+   "description": "A New World Created By Hidetaka Miyazaki And George R. R. Martin\n\nELDEN RING, developed by FromSoftware, Inc. and BANDAI NAMCO Entertainment Inc., is a fantasy action-RPG adventure set within a world created by Hidetaka Miyazaki creator of the influential DARK SOULS video game series; and George R.R. Martin author of The New York Times best-selling fantasy series, A Song of Ice and Fire. Danger and discovery lurk around every corner in FromSoftware's largest game to-date. \n\nHidetaka Miyazaki, President and Game Director of FromSoftware Inc. Known for directing critically-acclaimed games in beloved franchises including Armored Core, Dark Souls, and Sekiro: Shadows Die Twice. \n\nGeorge R.R. Martin is the #1 New York Times bestselling author of many novels, including the acclaimed series A Song of Ice and Fire - A Game of Thrones, A Clash of Kings, A Storm of Swords, A Feast For Crows, and A Dance with Dragons. As a writer-producer, he has worked on The Twilight Zone, Beauty and the Beast, and various feature films and pilots that were never made.",
+   "platform": "PlayStation 5",
+   "criticScoreSummary": {
+    "url": "/game/elden-ring/critic-reviews/",
+    "max": 100,
+    "score": 96,
+    "normalizedScore": 95.8835,
+    "reviewCount": 93,
+    "positiveCount": 86,
+    "neutralCount": 0,
+    "negativeCount": 0,
+    "sentiment": "Universal acclaim"
+   },
+   "releaseDate": "2022-02-25",
+   "releaseDateText": "2022-02-25",
+   "production": {
+    "companies": [
+     {
+      "id": 4000000330,
+      "typeId": 1,
+      "typeName": "Developer",
+      "name": "From Software",
+      "url": "/company/from-software/"
+     },
+     {
+      "id": 4000001716,
+      "typeId": 2,
+      "typeName": "Publisher",
+      "name": "Bandai Namco Games",
+      "url": "/company/bandai-namco-games/"
+     },
+     {
+      "id": 4000000330,
+      "typeId": 2,
+      "typeName": "Publisher",
+      "name": "From Software",
+      "url": "/company/from-software/"
+     }
+    ],
+    "officialSite": null,
+    "crew": []
+   },
+   "images": [
+    {
+     "id": "6-1-824956-52",
+     "filename": "6-1-824956-52.jpg",
+     "dateCreated": {
+      "date": null,
+      "timezone": null
+     },
+     "alt": null,
+     "credits": null,
+     "path": null,
+     "cropGravity": null,
+     "crop": null,
+     "caption": null,
+     "typeName": "mainImage",
+     "imageUrl": null,
+     "width": 1024,
+     "height": 1024,
+     "sType": null,
+     "bucketType": "catalog",
+     "bucketPath": "/provider/6/12/6-1-824956-52.jpg",
+     "mediaType": null,
+     "provider": "6"
+    },
+    {
+     "id": "6-1-824862-13",
+     "filename": "6-1-824862-13.jpg",
+     "dateCreated": {
+      "date": null,
+      "timezone": null
+     },
+     "alt": null,
+     "credits": null,
+     "path": null,
+     "cropGravity": null,
+     "crop": null,
+     "caption": null,
+     "typeName": "cardImage",
+     "imageUrl": null,
+     "width": 932,
+     "height": 1316,
+     "sType": null,
+     "bucketType": "catalog",
+     "bucketPath": "/provider/6/3/6-1-824862-13.jpg",
+     "mediaType": null,
+     "provider": "6"
+    }
+   ],
+   "video": {
+    "videoId": 10125272,
+    "slug": "elden-ring",
+    "title": "Every Scadutree Fragment Location Guide | Elden Ring: Shadow of the Erdtree",
+    "videoTitle": "Every Scadutree Fragment Location Guide | Elden Ring: Shadow of the Erdtree",
+    "duration": 1589,
+    "providerId": null,
+    "type": null,
+    "contentType": null,
+    "contentTypeId": 0,
+    "url": null,
+    "description": null,
+    "originalAirDate": "2024-06-24T07:58:00.000+00:00",
+    "displayDatePublished": {
+     "date": "2024-06-24T07:58:00.000+00:00",
+     "timezone": null
+    },
+    "seasonNumber": null,
+    "episodeNumber": null,
+    "images": [],
+    "jwPlayerId": "OXExoEAD",
+    "manifestUrl": "https://cdn.jwplayer.com/manifests/OXExoEAD.m3u8",
+    "embedUrl": "https://cdn.jwplayer.com/players/OXExoEAD.html"
+   },
+   "genres": [
+    {
+     "id": 2300497664,
+     "name": "Action RPG"
+    }
+   ],
+   "rating": "M",
+   "countries": [
+    "North America",
+    "Japan",
+    "Europe",
+    "Australia",
+    "Korea",
+    "Asia"
+   ],
+   "platforms": [
+    {
+     "id": 1500000121,
+     "name": "Xbox One",
+     "criticScoreSummary": {
+      "url": "/game/elden-ring/critic-reviews/?platform=xbox-one",
+      "max": 100,
+      "score": null,
+      "normalizedScore": null,
+      "reviewCount": null,
+      "positiveCount": null,
+      "neutralCount": null,
+      "negativeCount": null,
+      "sentiment": null
+     },
+     "relatedGameId": 1400570837,
+     "isLeadPlatform": false,
+     "releaseDate": "2022-02-25",
+     "slug": "xbox-one"
+    },
+    {
+     "id": 1500000019,
+     "name": "PC",
+     "criticScoreSummary": {
+      "url": "/game/elden-ring/critic-reviews/?platform=pc",
+      "max": 100,
+      "score": 94,
+      "normalizedScore": 93.831,
+      "reviewCount": 63,
+      "positiveCount": 57,
+      "neutralCount": 3,
+      "negativeCount": 0,
+      "sentiment": "Universal acclaim"
+     },
+     "relatedGameId": 1400570838,
+     "isLeadPlatform": false,
+     "releaseDate": "2022-02-25",
+     "slug": "pc"
+    },
+    {
+     "id": 1500000120,
+     "name": "PlayStation 4",
+     "criticScoreSummary": {
+      "url": "/game/elden-ring/critic-reviews/?platform=playstation-4",
+      "max": 100,
+      "score": null,
+      "normalizedScore": null,
+      "reviewCount": 1,
+      "positiveCount": 1,
+      "neutralCount": 0,
+      "negativeCount": 0,
+      "sentiment": null
+     },
+     "relatedGameId": 1400570841,
+     "isLeadPlatform": false,
+     "releaseDate": "2022-02-25",
+     "slug": "playstation-4"
+    },
+    {
+     "id": 1500000129,
+     "name": "Xbox Series X",
+     "criticScoreSummary": {
+      "url": "/game/elden-ring/critic-reviews/?platform=xbox-series-x",
+      "max": 100,
+      "score": 96,
+      "normalizedScore": 95.9474,
+      "reviewCount": 19,
+      "positiveCount": 19,
+      "neutralCount": 0,
+      "negativeCount": 0,
+      "sentiment": "Universal acclaim"
+     },
+     "relatedGameId": 1400627894,
+     "isLeadPlatform": false,
+     "releaseDate": "2022-02-25",
+     "slug": "xbox-series-x"
+    },
+    {
+     "id": 1500000128,
+     "name": "PlayStation 5",
+     "criticScoreSummary": {
+      "url": "/game/elden-ring/critic-reviews/?platform=playstation-5",
+      "max": 100,
+      "score": 96,
+      "normalizedScore": 95.8835,
+      "reviewCount": 93,
+      "positiveCount": 86,
+      "neutralCount": 0,
+      "negativeCount": 0,
+      "sentiment": "Universal acclaim"
+     },
+     "relatedGameId": 1400627895,
+     "isLeadPlatform": true,
+     "releaseDate": "2022-02-25",
+     "slug": "playstation-5"
+    }
+   ],
+   "gameTaxonomy": {
+    "franchises": [
+     {
+      "id": 1100010721,
+      "name": "Elden Ring"
+     }
+    ],
+    "family": {
+     "id": 1200497664,
+     "name": "Elden Ring"
+    },
+    "title": {
+     "id": 1300501979,
+     "name": "Elden Ring"
+    },
+    "game": {
+     "id": 1400627895,
+     "name": "Elden Ring"
+    },
+    "platform": {
+     "id": 1500000128,
+     "name": "PlayStation 5"
+    }
+   }
+  }
+ },
+ "links": {
+  "self": {
+   "href": "https://backend.metacritic.com/games/metacritic/elden-ring/web"
+  }
+ },
+ "meta": {
+  "componentName": null,
+  "componentDisplayName": null,
+  "componentType": null
+ }
+}

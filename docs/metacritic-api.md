@@ -16,7 +16,7 @@ responses carry `data.totalResults` and `links.{next,prev,first,last}.href`.
 | Browse, all-time, newest | `/finder/metacritic/web?sortBy=-releaseDate&mcoTypeId=13&offset=N&limit=24` | 24 per site page; `limit` max is 50 (51 returns 400). ~181k games |
 | Game details | `/games/metacritic/{slug}/web` | `data.item`: title, description, developer, images, video, platforms, genres |
 | Per-platform Metascore | `/reviews/metacritic/critic/games/{slug}/platform/{platform}/stats/web` | `data.item.score` 0–100, `null` under 4 reviews |
-| Per-platform user score | `/reviews/metacritic/user/games/{slug}/platform/{platform}/stats/web` | `data.item.score` 0–10 |
+| Per-platform user score | `/reviews/metacritic/user/games/{slug}/platform/{platform}/stats/web` | `data.item.score` 0–10. Unrated games report `score: 0` with `reviewCount: 0`; the crawler stores `null` |
 | Critic reviews | `/reviews/metacritic/critic/games/{slug}/web?offset=0&limit=10&sort=score` | Server caps pages at 10. Fields: quote, score, publicationName, url, date, platform |
 | User reviews | `/reviews/metacritic/user/games/{slug}/web?offset=0&limit=50&filterBySentiment=all&sort=date` | Up to 50 per page. Fields: id, quote, score, date, author, platform, thumbsUp/Down, spoiler |
 
@@ -51,8 +51,21 @@ Both review lists accept `filterBySentiment=all|positive|neutral|negative`. Each
 - **Politeness.** Use a descriptive User-Agent, roughly 1 request per second, timeouts, and backoff
   on 429 and 5xx responses.
 
+## How the crawler uses it
+
+- Each UTC day gets a `CrawlState` row. The first run of the day reads New Releases, and later
+  runs walk browse pages from `next_page`.
+- A run skips slugs already in today's `processed_slugs` and keeps reading pages until it has
+  `GAMES_PER_RUN` new ones, stopping after `MAX_PAGES_PER_RUN` pages (logged in `error_log`).
+  It moves past a browse page only once nothing new is left on it, because a re-read of the same
+  page can surface games the last read didn't show.
+- A failed game or platform score goes into `error_log` and is skipped; only a failed list
+  request fails the whole run. Failed games still count as processed for the day.
+- `next_page` and `phase` are saved after the games, so a crash re-reads the same page.
+
 ## Request budget per run
 
-Each run makes 1–2 finder calls. Each of its 20 games needs 1 details call, 2 stats calls per
-platform, and the first page of critic and user reviews. With two platforms on average that is
-about 140 requests, roughly 2.5 minutes at 1 request per second, well within the hourly schedule.
+Games list 1 to 7 platforms, and each platform costs 2 stats calls. Live runs averaged about 13
+requests per game, so a 20-game run is about 260 requests, roughly 4.5 minutes at the default
+1 request per second. That is well within the hourly schedule. Review lists (M4) will add 2
+requests per game.

@@ -1,0 +1,280 @@
+{
+ "data": {
+  "id": "240ced1f-686e-45c0-a48e-d9bc57a40ee9",
+  "totalResults": 18626,
+  "items": [
+   {
+    "id": 1300594501,
+    "type": "game-title",
+    "typeId": 13,
+    "title": "Enshrouded",
+    "slug": "enshrouded",
+    "premiereYear": 2026,
+    "releaseDate": "2026-10-15",
+    "rating": "T",
+    "rank": 1,
+    "seoUrl": null,
+    "image": {
+     "id": null,
+     "filename": "7-1790044020.jpg",
+     "dateCreated": {
+      "date": null,
+      "timezone": null
+     },
+     "alt": null,
+     "credits": null,
+     "path": null,
+     "cropGravity": null,
+     "crop": null,
+     "caption": null,
+     "typeName": null,
+     "imageUrl": null,
+     "width": 259,
+     "height": 360,
+     "sType": null,
+     "bucketType": "catalog",
+     "bucketPath": "/provider/7/2/7-1790044020.jpg",
+     "mediaType": null,
+     "provider": null
+    },
+    "criticScoreSummary": {
+     "url": "/game/enshrouded/critic-reviews/",
+     "max": 100,
+     "score": 89,
+     "reviewCount": 7,
+     "positiveCount": 7,
+     "neutralCount": 0,
+     "negativeCount": 0,
+     "sentiment": "Generally favorable"
+    },
+    "genres": [
+     {
+      "id": null,
+      "name": "Action RPG"
+     }
+    ],
+    "numberOfSeasons": 0,
+    "season": null,
+    "network": null,
+    "platforms": [
+     {
+      "id": 1500000019,
+      "name": "PC"
+     }
+    ],
+    "inTheaters": false,
+    "description": "You are Flameborn, last ember of hope of a dying race. Awaken, survive the terror of a corrupting fog, and reclaim the lost beauty of your kingdom. Venture into a vast world, vanquish punishing bosses, build grand halls and forge your path in this co-op survival action RPG for up to 16 players. ",
+    "duration": 0,
+    "streamingDates": {
+     "videoClosestPastAvailableDate": null,
+     "videoClosestFutureAvailableDate": null,
+     "videoClosestPastExpiryDate": null,
+     "videoClosestFutureExpiryDate": null,
+     "videoClosestPastAvailableNetworkId": null,
+     "videoClosestFutureAvailableNetworkId": null,
+     "videoClosestPastExpiryNetworkId": null,
+     "videoClosestFutureExpiryNetworkId": null,
+     "networkStreamingDates": null
+    },
+    "userScore": {
+     "score": null
+    }
+   },
+   {
+    "id": 1300741007,
+    "type": "game-title",
+    "typeId": 13,
+    "title": "Disney/Pixar Toy Story: Retro Roundup!",
+    "slug": "disney-pixar-toy-story-retro-roundup",
+    "premiereYear": 2026,
+    "releaseDate": "2026-10-15",
+    "rating": null,
+    "rank": 1,
+    "seoUrl": null,
+    "image": {
+     "id": null,
+     "filename": "6-1-1243874-52.jpg",
+     "dateCreated": {
+      "date": null,
+      "timezone": null
+     },
+     "alt": null,
+     "credits": null,
+     "path": null,
+     "cropGravity": null,
+     "crop": null,
+     "caption": null,
+     "typeName": null,
+     "imageUrl": null,
+     "width": 1024,
+     "height": 1024,
+     "sType": null,
+     "bucketType": "catalog",
+     "bucketPath": "/provider/6/12/6-1-1243874-52.jpg",
+     "mediaType": null,
+     "provider": null
+    },
+    "criticScoreSummary": {
+     "url": "/game/disney-pixar-toy-story-retro-roundup/critic-reviews/",
+     "max": 100,
+     "score": 80,
+     "reviewCount": 5,
+     "positiveCount": 4,
+     "neutralCount": 1,
+     "negativeCount": 0,
+     "sentiment": "Generally favorable"
+    },
+    "genres": [
+     {
+      "id": null,
+      "name": "Compilation"
+     }
+    ],
+    "numberOfSeasons": 0,
+    "season": null,
+    "network": null,
+    "platforms": [
+     {
+      "id": 1500000128,
+      "name": "PlayStation 5"
+     }
+    ],
+    "inTheaters": false,
+    "description": "Step back into Andy’s room with Woody, Buzz Lightyear, and more classic characters in Toy Story: Retro Roundup! This five-game collection features console and handheld versions of four early Toy Story titles, as well as A Bug’s Life. All the games have been upgraded with new features, quality-of-life improvements, and an overflowing toy chest of behind-the-scenes content. Revisit the ‘90s and early 2000s hits you loved and share these titles with a new generation of Toy Story fans. ",
+    "duration": 0,
+    "streamingDates": {
+     "videoClosestPastAvailableDate": null,
+     "videoClosestFutureAvailableDate": null,
+     "videoClosestPastExpiryDate": null,
+     "videoClosestFutureExpiryDate": null,
+     "videoClosestPastAvailableNetworkId": null,
+     "videoClosestFutureAvailableNetworkId": null,
+     "videoClosestPastExpiryNetworkId": null,
+     "videoClosestFutureExpiryNetworkId": null,
+     "networkStreamingDates": null
+    },
+    "userScore": {
+     "score": null
+    }
+   },
+   {
+    "id": 1300728878,
+    "type": "game-title",
+    "typeId": 13,
+    "title": "Bluey's Happy Snaps",
+    "slug": "blueys-happy-snaps",
+    "premiereYear": 2026,
+    "releaseDate": "2026-10-15",
+    "rating": "E",
+    "rank": 1,
+    "seoUrl": null,
+    "image": {
+     "id": null,
+     "filename": "6-1-1218921-17.jpg",
+     "dateCreated": {
+      "date": null,
+      "timezone": null
+     },
+     "alt": null,
+     "credits": null,
+     "path": null,
+     "cropGravity": null,
+     "crop": null,
+     "caption": null,
+     "typeName": null,
+     "imageUrl": null,
+     "width": 100,
+     "height": 163,
+     "sType": null,
+     "bucketType": "catalog",
+     "bucketPath": "/provider/6/12/6-1-1218921-17.jpg",
+     "mediaType": null,
+     "provider": null
+    },
+    "criticScoreSummary": {
+     "url": "/game/blueys-happy-snaps/critic-reviews/",
+     "max": 100,
+     "score": 77,
+     "reviewCount": 6,
+     "positiveCount": 2,
+     "neutralCount": 4,
+     "negativeCount": 0,
+     "sentiment": "Generally favorable"
+    },
+    "genres": [
+     {
+      "id": null,
+      "name": "Adventure"
+     }
+    ],
+    "numberOfSeasons": 0,
+    "season": null,
+    "network": null,
+    "platforms": [
+     {
+      "id": 1500000154,
+      "name": "Nintendo Switch 2"
+     }
+    ],
+    "inTheaters": false,
+    "description": "Explore, have fun and capture your favorite moments with Bluey and Bingo in this photo-powered game. Look out for familiar spots from the show, create your own scrapbook and turn in-game memories into playful moments for real life.\r\n\r\nBluey and Bingo have found Dad's old camera (back from when he was cool). Take it with you around the world of Bluey and snap photos of the games they play and wildlife they discover. Each snapshot is saved to Bluey's scrapbook, where players can keep their favorite moments.\r\n\r\nShare the adventure side-by-side! A second player can join in to explore and strike a pose while the main player leads the adventure behind the camera. You can even play with toys together along the way!",
+    "duration": 0,
+    "streamingDates": {
+     "videoClosestPastAvailableDate": null,
+     "videoClosestFutureAvailableDate": null,
+     "videoClosestPastExpiryDate": null,
+     "videoClosestFutureExpiryDate": null,
+     "videoClosestPastAvailableNetworkId": null,
+     "videoClosestFutureAvailableNetworkId": null,
+     "videoClosestPastExpiryNetworkId": null,
+     "videoClosestFutureExpiryNetworkId": null,
+     "networkStreamingDates": null
+    },
+    "userScore": {
+     "score": null
+    }
+   }
+  ],
+  "genres": null,
+  "network": null
+ },
+ "links": {
+  "self": {
+   "href": "https://backend.metacritic.com/finder/metacritic/web?sortBy=-releaseDate&metaScoreMin=1&mcoTypeId=13&offset=0&limit=20",
+   "meta": {
+    "pageNum": 1,
+    "count": 20
+   }
+  },
+  "prev": {
+   "href": null,
+   "meta": null
+  },
+  "next": {
+   "href": "https://backend.metacritic.com/finder/metacritic/web?sortBy=-releaseDate&metaScoreMin=1&mcoTypeId=13&offset=20&limit=20",
+   "meta": {
+    "pageNum": 2,
+    "count": 20
+   }
+  },
+  "first": {
+   "href": "https://backend.metacritic.com/finder/metacritic/web?sortBy=-releaseDate&metaScoreMin=1&mcoTypeId=13&offset=0&limit=20",
+   "meta": {
+    "pageNum": 1,
+    "count": 20
+   }
+  },
+  "last": {
+   "href": "https://backend.metacritic.com/finder/metacritic/web?sortBy=-releaseDate&metaScoreMin=1&mcoTypeId=13&offset=18620&limit=20",
+   "meta": {
+    "pageNum": 932,
+    "count": 6
+   }
+  }
+ },
+ "meta": {
+  "componentName": null,
+  "componentDisplayName": null,
+  "componentType": null
+ }
+}

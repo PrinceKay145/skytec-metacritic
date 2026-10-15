@@ -1,0 +1,158 @@
+import logging
+from datetime import UTC, datetime
+
+import httpx
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.config import settings
+from app.db import SessionLocal
+from app.metacritic import API_URL, GameDetails, MetacriticClient
+from app.models import (
+    CrawlPhase,
+    CrawlRun,
+    CrawlState,
+    Game,
+    PlatformScore,
+    ReviewSource,
+    RunStatus,
+    utcnow,
+)
+
+BROWSE_URL = "https://www.metacritic.com/browse/game/all/all/all-time/new/"
+
+log = logging.getLogger(__name__)
+
+
+def run_crawl(
+    client: MetacriticClient | None = None,
+    limit: int = settings.games_per_run,
+    max_pages: int = settings.max_pages_per_run,
+) -> CrawlRun:
+    with SessionLocal() as session, client or MetacriticClient() as metacritic:
+        run = CrawlRun()
+        session.add(run)
+        session.commit()
+        log.info("crawl run %s started", run.id)
+        try:
+            _crawl(session, metacritic, run, limit, max_pages)
+            run.status = RunStatus.success
+        except Exception as exc:
+            log.exception("crawl run %s failed", run.id)
+            session.rollback()
+            run.record_error("run", "", _describe(exc))
+            run.status = RunStatus.failed
+        run.finished_at = utcnow()
+        session.commit()
+        log.info(
+            "crawl run %s %s: %s games, %s errors", run.id, run.status, run.processed, run.errors
+        )
+        return run
+
+
+def _crawl(
+    session: Session, metacritic: MetacriticClient, run: CrawlRun, limit: int, max_pages: int
+) -> None:
+    today = datetime.now(UTC).date()
+    state = session.get(CrawlState, today)
+    if state is None:
+        state = CrawlState(date=today, phase=CrawlPhase.new_releases, next_page=1)
+        session.add(state)
+        session.commit()
+
+    slugs, phase, next_page = _pick_slugs(metacritic, run, state, limit, max_pages)
+    for slug in slugs:
+        try:
+            _upsert(session, metacritic, run, metacritic.game(slug))
+            run.processed += 1
+        except Exception as exc:
+            log.warning("skipping game %s: %s", slug, exc)
+            session.rollback()
+            run.record_error(
+                "game", _url(exc, f"{API_URL}/games/metacritic/{slug}/web"), _describe(exc)
+            )
+        state.processed_slugs.append(slug)
+        session.commit()
+    # the page pointer moves only after the games are saved, so a crash re-reads the same page
+    state.phase, state.next_page = phase, next_page
+
+
+def _pick_slugs(
+    metacritic: MetacriticClient, run: CrawlRun, state: CrawlState, limit: int, max_pages: int
+) -> tuple[list[str], CrawlPhase, int]:
+    seen = set(state.processed_slugs)
+    picked: list[str] = []
+    phase, page = state.phase, state.next_page
+    for _ in range(max_pages):
+        browsing = phase == CrawlPhase.browse
+        if browsing:
+            listed = metacritic.browse_page(page)
+            if not listed:
+                return picked, phase, page
+        else:
+            listed = metacritic.new_releases()
+            phase = CrawlPhase.browse
+        fresh = [slug for slug in dict.fromkeys(listed) if slug not in seen]
+        taken = fresh[: limit - len(picked)]
+        picked += taken
+        seen.update(taken)
+        # browse order is unstable within a date, so leave a page only when nothing new is left
+        if browsing and len(taken) == len(fresh):
+            page += 1
+        if len(picked) == limit:
+            return picked, phase, page
+    run.record_error(
+        "browse",
+        f"{BROWSE_URL}?page={page}",
+        f"page cap of {max_pages} reached with {len(picked)}/{limit} new games",
+    )
+    return picked, phase, page
+
+
+def _upsert(
+    session: Session, metacritic: MetacriticClient, run: CrawlRun, details: GameDetails
+) -> None:
+    game = session.scalar(select(Game).where(Game.slug == details.slug)) or Game(slug=details.slug)
+    game.title = details.title
+    game.description = details.description
+    game.developer = details.developer
+    game.cover_url = details.cover_url
+    game.video_url = details.video_url
+    session.add(game)
+
+    scores = {score.platform: score for score in game.scores}
+    for platform in details.platforms:
+        try:
+            metascore = metacritic.score(details.slug, platform.slug, ReviewSource.critic)
+            userscore = metacritic.score(details.slug, platform.slug, ReviewSource.user)
+        except Exception as exc:
+            log.warning("skipping %s scores for %s: %s", platform.slug, details.slug, exc)
+            fallback = f"https://www.metacritic.com/game/{details.slug}/"
+            run.record_error("score", _url(exc, fallback), _describe(exc))
+            continue
+        score = scores.get(platform.name)
+        if score is None:
+            score = PlatformScore(platform=platform.name)
+            game.scores.append(score)
+        score.metascore = None if metascore is None else int(metascore)
+        score.userscore = userscore
+
+
+def _url(exc: Exception, fallback: str) -> str:
+    if isinstance(exc, httpx.RequestError | httpx.HTTPStatusError):
+        return str(exc.request.url)
+    return fallback
+
+
+def _describe(exc: Exception) -> str:
+    return f"{type(exc).__name__}: {exc}"
+
+
+if __name__ == "__main__":
+    from app.db import Base, engine
+
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
+    )
+    Base.metadata.create_all(engine)
+    run_crawl()
