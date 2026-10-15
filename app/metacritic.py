@@ -37,6 +37,7 @@ class GameDetails:
     developer: str | None
     cover_url: str | None
     video_url: str | None
+    genres: list[str]
     platforms: list[Platform]
 
 
@@ -67,6 +68,7 @@ def parse_game(data: dict[str, Any]) -> GameDetails:
         if cover and cover.get("bucketPath")
         else None,
         video_url=(item.get("video") or {}).get("embedUrl"),
+        genres=[genre["name"] for genre in item.get("genres") or [] if genre.get("name")],
         platforms=[Platform(p["slug"], p["name"]) for p in item.get("platforms") or []],
     )
 

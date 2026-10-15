@@ -31,6 +31,7 @@ Both review lists accept `filterBySentiment=all|positive|neutral|negative`. Each
   image (portrait box art), falling back to `mainImage`. The unsigned URL returns 200. `/a/img/resize/...`
   URLs are signed and return 403 if built by hand.
 - `Game.video_url`: `item.video.embedUrl` (JW Player page). Not always a trailer; can be `null`.
+- `Game.genres`: `item.genres[].name` (used for similar games and shown on the card).
 - `PlatformScore.platform`: `item.platforms[].slug` (`playstation-5`, `pc`, …). Scores come from the
   two stats endpoints. The game payload only has per-platform critic scores, they are often `null`,
   and it has no user scores at all.

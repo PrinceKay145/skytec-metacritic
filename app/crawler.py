@@ -20,6 +20,7 @@ from app.models import (
     RunStatus,
     utcnow,
 )
+from app.similar import embedding_text, pack, text_hash
 from app.summaries import reviews_hash, summarize
 
 BROWSE_URL = "https://www.metacritic.com/browse/game/all/all/all-time/new/"
@@ -83,10 +84,13 @@ def _crawl(
         session.commit()
 
     slugs, phase, next_page = _pick_slugs(metacritic, run, state, limit, max_pages)
+    embeddings_ok = True
     for slug in slugs:
         try:
             game = _upsert(session, metacritic, run, metacritic.game(slug))
             _summarize(metacritic, llm, run, game)
+            if embeddings_ok:
+                embeddings_ok = _embed(llm, run, game)
             run.processed += 1
         except Exception as exc:
             log.warning("skipping game %s: %s", slug, exc)
@@ -141,6 +145,7 @@ def _upsert(
     game.developer = details.developer
     game.cover_url = details.cover_url
     game.video_url = details.video_url
+    game.genres = details.genres
     session.add(game)
 
     scores = {score.platform: score for score in game.scores}
@@ -183,6 +188,25 @@ def _summarize(metacritic: MetacriticClient, llm: LLM, run: CrawlRun, game: Game
         current.likes = "\n".join(summary.likes)
         current.dislikes = "\n".join(summary.dislikes)
         current.reviews_hash = digest
+
+
+def _embed(llm: LLM, run: CrawlRun, game: Game) -> bool:
+    """Returns False when the embed model fails, so the rest of the run skips embeddings."""
+    text = embedding_text(game)
+    digest = text_hash(text)
+    if game.embedding_model == llm.embed_model and game.embedding_hash == digest:
+        return True
+    try:
+        [vector] = llm.embed([text])
+    except Exception as exc:
+        log.warning("embeddings unavailable, skipping them for this run: %s", exc)
+        message = f"{_describe(exc)} (embeddings skipped for the rest of this run)"
+        run.record_error("embedding", _url(exc, ""), message)
+        return False
+    game.embedding = pack(vector)
+    game.embedding_model = llm.embed_model
+    game.embedding_hash = digest
+    return True
 
 
 def _url(exc: Exception, fallback: str) -> str:

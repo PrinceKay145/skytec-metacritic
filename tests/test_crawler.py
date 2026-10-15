@@ -2,6 +2,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import httpx
+import pytest
 from sqlalchemy import func, select
 
 from app.crawler import run_crawl
@@ -17,6 +18,7 @@ from app.models import (
     ReviewSummary,
     RunStatus,
 )
+from app.similar import unpack
 from tests.helpers import load_fixture
 
 
@@ -62,15 +64,25 @@ class FakeMetacritic:
 
 
 class FakeLLM:
-    def __init__(self, fail: bool = False) -> None:
+    embed_model = "fake-embed"
+
+    def __init__(self, fail: bool = False, fail_embed: bool = False) -> None:
         self.prompts: list[str] = []
+        self.embedded: list[str] = []
         self.fail = fail
+        self.fail_embed = fail_embed
 
     def complete_json(self, system: str, prompt: str) -> dict[str, Any]:
         self.prompts.append(prompt)
         if self.fail:
             raise RuntimeError("LLM unavailable")
         return {"likes": ["Combat"], "dislikes": ["Camera"]}
+
+    def embed(self, texts: list[str]) -> list[list[float]]:
+        self.embedded += texts
+        if self.fail_embed:
+            raise RuntimeError('model "fake-embed" not found')
+        return [[3.0, 4.0] for _ in texts]
 
 
 def finder(slugs: list[str]) -> dict:
@@ -268,3 +280,48 @@ def test_games_without_reviews_get_no_summary() -> None:
 
     assert llm.prompts == []
     assert summary_count() == 0
+
+
+def test_games_get_genres_and_an_embedding_of_their_text() -> None:
+    llm = FakeLLM()
+    FakeMetacritic(["elden-ring"], []).crawl(llm, limit=1)
+
+    assert len(llm.embedded) == 1
+    assert "Genres: Action RPG" in llm.embedded[0]
+    assert "Critics like: Combat" in llm.embedded[0]
+    assert "Camera" not in llm.embedded[0]
+    with SessionLocal() as session:
+        game = session.scalars(select(Game)).one()
+        assert game.genres == ["Action RPG"]
+        assert game.embedding_model == "fake-embed"
+        assert unpack(game.embedding or b"").tolist() == pytest.approx([0.6, 0.8])
+
+
+def test_embeddings_recompute_only_when_their_text_changes() -> None:
+    fake = FakeMetacritic(["a"], [])
+    fake.crawl(FakeLLM(), limit=1)
+
+    forget_today()
+    unchanged = FakeLLM()
+    fake.crawl(unchanged, limit=1)
+    assert unchanged.embedded == []
+
+    forget_today()
+    fake.reviews[ReviewSource.user]["data"]["items"][0]["quote"] = "Edited review"
+    resummarized = FakeLLM()
+    resummarized.complete_json = lambda system, prompt: {"likes": ["Story"], "dislikes": []}
+    fake.crawl(resummarized, limit=1)
+    assert len(resummarized.embedded) == 1
+    assert "Users like: Story" in resummarized.embedded[0]
+
+
+def test_missing_embed_model_is_logged_once_and_skipped() -> None:
+    llm = FakeLLM(fail_embed=True)
+    run = FakeMetacritic(["a", "b"], []).crawl(llm, limit=2)
+
+    assert (run.status, run.processed, run.errors) == (RunStatus.success, 2, 1)
+    assert run.error_log[0]["source"] == "embedding"
+    assert "rest of this run" in run.error_log[0]["message"]
+    assert len(llm.embedded) == 1
+    with SessionLocal() as session:
+        assert session.scalars(select(Game.embedding_model)).all() == [None, None]

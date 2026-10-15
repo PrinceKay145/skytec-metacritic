@@ -2,7 +2,7 @@ import datetime as dt
 from datetime import UTC, datetime
 from enum import StrEnum, auto
 
-from sqlalchemy import JSON, ForeignKey, Text, UniqueConstraint
+from sqlalchemy import JSON, ForeignKey, LargeBinary, Text, UniqueConstraint
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -42,6 +42,11 @@ class Game(Base):
     developer: Mapped[str | None]
     description: Mapped[str | None] = mapped_column(Text)
     video_url: Mapped[str | None]
+    genres: Mapped[list[str]] = mapped_column(JSON, default=list)
+    # normalized float32 vector; model and input hash decide when it needs recomputing
+    embedding: Mapped[bytes | None] = mapped_column(LargeBinary, deferred=True)
+    embedding_model: Mapped[str | None]
+    embedding_hash: Mapped[str | None]
     first_seen: Mapped[datetime] = mapped_column(default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(default=utcnow, onupdate=utcnow)
 

@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 from app import main
 from app.db import SessionLocal
 from app.models import Game, PlatformScore, ReviewSource, ReviewSummary
+from app.similar import pack
 
 
 def add_game(slug: str, title: str, scores: dict[str, tuple[int | None, float | None]]) -> None:
@@ -133,3 +134,21 @@ def test_unknown_pages_get_an_html_404_and_api_paths_keep_json(client: TestClien
     api = client.get("/api/nope")
     assert api.status_code == 404
     assert api.json() == {"detail": "Not Found"}
+
+
+def test_game_card_lists_similar_games_or_hides_the_block(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(main.settings, "embed_model", "embed-model")
+    with SessionLocal() as session:
+        for slug, vector in (("hades-ii", [1, 0]), ("hades", [0.9, 0.1]), ("tetris", [0, 1])):
+            game = Game(slug=slug, title=slug.title(), embedding=pack(vector))
+            game.embedding_model = "embed-model"
+            session.add(game)
+        session.add(Game(slug="lonely", title="Lonely"))
+        session.commit()
+
+    html = client.get("/games/hades-ii").text
+    block = html[html.index("Similar games") :]
+    assert block.index('href="/games/hades"') < block.index('href="/games/tetris"')
+    assert "Similar games" not in client.get("/games/lonely").text

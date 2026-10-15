@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     llm_base_url: str = "http://localhost:11434/v1"
     llm_api_key: str = ""
     llm_model: str = "gemma3:4b"
+    embed_model: str = "nomic-embed-text"
     llm_timeout_seconds: float = 120.0
     llm_max_retries: int = 1
 

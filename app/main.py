@@ -18,6 +18,7 @@ from app.config import settings
 from app.crawler import fail_stale_runs, run_crawl
 from app.db import Base, engine, get_session
 from app.models import Game, PlatformScore, ReviewSource
+from app.similar import similar_games
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
@@ -146,5 +147,6 @@ def game_card(request: Request, slug: str, session: SessionDep) -> HTMLResponse:
         "scores": scores,
         "summaries": {summary.source: summary for summary in game.summaries},
         "sources": list(ReviewSource),
+        "similar": similar_games(session, game, settings.embed_model),
     }
     return templates.TemplateResponse(request, "game.html", context)

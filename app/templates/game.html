@@ -11,7 +11,7 @@
   {% endif %}
   <div>
     <h1>{{ game.title }}</h1>
-    <p class="muted">{% if game.developer %}Developer: {{ game.developer }}{% else %}Developer unknown{% endif %}</p>
+    <p class="muted">{% if game.developer %}Developer: {{ game.developer }}{% else %}Developer unknown{% endif %}{% if game.genres %} · {{ game.genres | join(", ") }}{% endif %}</p>
     <table>
       <thead><tr><th scope="col">Platform</th><th scope="col">Metascore</th><th scope="col">User score</th></tr></thead>
       <tbody>
@@ -51,5 +51,25 @@
   </section>
   {% endfor %}
 </div>
+{% if similar %}
+<h2>Similar games</h2>
+<ul class="grid similar">
+  {% for other in similar %}
+  <li class="card">
+    <a href="/games/{{ other.slug }}">
+      {% if other.cover_url %}
+      <img class="cover" src="{{ other.cover_url }}" alt="" loading="lazy" referrerpolicy="no-referrer">
+      {% else %}
+      <div class="cover" aria-hidden="true"></div>
+      {% endif %}
+      <div class="card-body">
+        <h3>{{ other.title }}</h3>
+        {% if other.developer %}<p class="muted">{{ other.developer }}</p>{% endif %}
+      </div>
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
 <p class="muted small">Last updated {{ game.updated_at.strftime("%Y-%m-%d %H:%M") }} UTC</p>
 {% endblock %}
