@@ -10,5 +10,6 @@ COPY migrations ./migrations
 COPY app ./app
 
 EXPOSE 8000
-# hosts such as Render set $PORT; exec keeps uvicorn as PID 1 so it receives stop signals
-CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# hosts such as Render set $PORT; exec keeps uvicorn as PID 1 so it receives stop signals;
+# the proxy flags trust the platform's X-Forwarded-* headers so request.url is https
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips '*'"]

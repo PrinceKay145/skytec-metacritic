@@ -18,7 +18,9 @@
 {% endfor %}
 {% if has_more %}
 <li class="more">
-  {% set next_url = request.url.include_query_params(page=page + 1) %}
+  {% set next = request.url.include_query_params(page=page + 1) %}
+  {# path and query only: an absolute URL would say http:// behind the host's HTTPS proxy #}
+  {% set next_url = next.path ~ "?" ~ next.query %}
   <a class="button" href="{{ next_url }}" hx-get="{{ next_url }}"
      hx-target="closest li" hx-swap="outerHTML">Load more</a>
 </li>

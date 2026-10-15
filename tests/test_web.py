@@ -1,3 +1,5 @@
+import re
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -69,7 +71,10 @@ def test_htmx_requests_get_partials_and_load_more(
     first = client.get("/", params={"sort": "title"}, headers=htmx).text
     assert "<html" not in first
     assert titles_in_order(first) == ["Alpha Quest", "Beta 100% Run"]
-    assert "page=2" in first
+    links = re.findall(r'(?:href|hx-get)="([^"]*page=2[^"]*)"', first)
+    assert len(links) == 2
+    # relative, so it keeps the page's scheme behind an HTTPS proxy
+    assert all(link.startswith("/?") for link in links), links
 
     second = client.get("/", params={"sort": "title", "page": 2}, headers=htmx).text
     assert titles_in_order(second) == ["Gamma"]
