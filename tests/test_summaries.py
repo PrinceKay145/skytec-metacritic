@@ -76,3 +76,43 @@ def test_openai_compatible_llm_request() -> None:
     assert body["model"] == "test-model"
     assert body["response_format"] == {"type": "json_object"}
     assert [m["role"] for m in body["messages"]] == ["system", "user"]
+
+
+def chat_reply(content: str) -> httpx.Response:
+    return httpx.Response(200, json={"choices": [{"message": {"content": content}}]})
+
+
+@pytest.mark.parametrize(
+    "first",
+    [httpx.Response(503), httpx.Response(429), chat_reply("not json at all")],
+)
+def test_llm_retries_once_after_a_hiccup(first: httpx.Response) -> None:
+    replies = iter([first, chat_reply('{"likes": []}')])
+    llm = OpenAICompatibleLLM(
+        base_url="http://llm.test/v1",
+        backoff=0,
+        transport=httpx.MockTransport(lambda r: next(replies)),
+    )
+    assert llm.complete_json("s", "p") == {"likes": []}
+
+
+def test_llm_gives_up_after_one_retry_and_skips_client_errors() -> None:
+    calls: list[httpx.Request] = []
+
+    def failing(status: int) -> OpenAICompatibleLLM:
+        def handler(request: httpx.Request) -> httpx.Response:
+            calls.append(request)
+            return httpx.Response(status)
+
+        return OpenAICompatibleLLM(
+            base_url="http://llm.test/v1", backoff=0, transport=httpx.MockTransport(handler)
+        )
+
+    with pytest.raises(httpx.HTTPStatusError):
+        failing(500).complete_json("s", "p")
+    assert len(calls) == 2
+
+    calls.clear()
+    with pytest.raises(httpx.HTTPStatusError):
+        failing(401).complete_json("s", "p")
+    assert len(calls) == 1

@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     llm_api_key: str = ""
     llm_model: str = "gemma3:4b"
     llm_timeout_seconds: float = 120.0
+    llm_max_retries: int = 1
 
 
 settings = Settings()
