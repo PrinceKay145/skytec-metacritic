@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -28,6 +29,15 @@ class Settings(BaseSettings):
     embed_model: str = "nomic-embed-text"
     llm_timeout_seconds: float = 120.0
     llm_max_retries: int = 1
+
+    @field_validator("database_url")
+    @classmethod
+    def use_psycopg_driver(cls, url: str) -> str:
+        # hosts hand out postgres:// or postgresql:// URLs; SQLAlchemy needs the driver named
+        for prefix in ("postgres://", "postgresql://"):
+            if url.startswith(prefix):
+                return "postgresql+psycopg://" + url.removeprefix(prefix)
+        return url
 
 
 settings = Settings()

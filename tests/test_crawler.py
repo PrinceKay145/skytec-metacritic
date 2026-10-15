@@ -7,7 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
 from app import crawler
-from app.crawler import claim_run, run_crawl
+from app.crawler import claim_run, next_crawl_time, run_crawl
 from app.db import SessionLocal
 from app.metacritic import API_URL, BROWSE_PAGE_SIZE, MetacriticClient
 from app.models import (
@@ -385,3 +385,20 @@ def test_backfill_embeds_games_from_another_model(monkeypatch: pytest.MonkeyPatc
         models = dict(session.execute(select(Game.slug, Game.embedding_model)).all())
     assert models == {"a": "fake-embed", "old-1": "fake-embed", "old-2": "old-model"}
     assert len(llm.embedded) == 2
+
+
+def test_first_scheduled_crawl_waits_out_a_recent_run() -> None:
+    before = datetime.now(UTC)
+    assert next_crawl_time() >= before
+
+    recent = datetime.now(UTC) - timedelta(minutes=10)
+    with SessionLocal() as session:
+        session.add(CrawlRun(status=RunStatus.success, started_at=recent))
+        session.commit()
+    assert next_crawl_time() == recent + timedelta(minutes=60)
+
+    with SessionLocal() as session:
+        session.query(CrawlRun).delete()
+        session.add(CrawlRun(status=RunStatus.success, started_at=before - timedelta(hours=3)))
+        session.commit()
+    assert next_crawl_time() - datetime.now(UTC) < timedelta(seconds=5)

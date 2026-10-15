@@ -1,5 +1,5 @@
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import httpx
 from sqlalchemy import func, or_, select
@@ -89,6 +89,18 @@ def fail_stale_runs() -> int:
             run.finished_at = utcnow()
         session.commit()
         return len(stale)
+
+
+def next_crawl_time() -> datetime:
+    """Now, unless the last run started less than one crawl interval ago."""
+    with SessionLocal() as session:
+        last = session.scalar(select(func.max(CrawlRun.started_at)))
+    now = datetime.now(UTC)
+    if last is None:
+        return now
+    if last.tzinfo is None:  # SQLite returns naive UTC datetimes
+        last = last.replace(tzinfo=UTC)
+    return max(now, last + timedelta(minutes=settings.crawl_interval_minutes))
 
 
 def llm_calls_today(session: Session) -> int:

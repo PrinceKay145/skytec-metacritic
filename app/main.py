@@ -19,7 +19,13 @@ from sqlalchemy.orm import Session, selectinload
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.config import settings
-from app.crawler import claim_run, fail_stale_runs, llm_calls_today, run_crawl
+from app.crawler import (
+    claim_run,
+    fail_stale_runs,
+    llm_calls_today,
+    next_crawl_time,
+    run_crawl,
+)
 from app.db import get_session, migrate
 from app.models import CrawlRun, CrawlState, Game, PlatformScore, ReviewSource, RunStatus
 from app.similar import similar_games
@@ -51,7 +57,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         "interval",
         id="crawl",
         minutes=settings.crawl_interval_minutes,
-        next_run_time=datetime.now(UTC),
+        # a restart or redeploy doesn't add a crawl if one ran less than an interval ago
+        next_run_time=next_crawl_time(),
         max_instances=1,
         coalesce=True,
     )
