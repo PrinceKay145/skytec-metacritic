@@ -7,6 +7,8 @@ from fastapi.testclient import TestClient
 
 os.environ["DATABASE_URL"] = f"sqlite:///{tempfile.mkdtemp()}/test.db"
 os.environ["SCHEDULER_ENABLED"] = "false"
+# any test that forgets to inject a fake LLM fails fast instead of reaching a real one
+os.environ["LLM_BASE_URL"] = "http://llm.invalid/v1"
 
 
 @pytest.fixture(autouse=True)

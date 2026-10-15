@@ -67,5 +67,7 @@ Both review lists accept `filterBySentiment=all|positive|neutral|negative`. Each
 
 Games list 1 to 7 platforms, and each platform costs 2 stats calls. Live runs averaged about 13
 requests per game, so a 20-game run is about 260 requests, roughly 4.5 minutes at the default
-1 request per second. That is well within the hourly schedule. Review lists (M4) will add 2
-requests per game.
+1 request per second. The critic and user review lists add 2 requests per game (first page
+each: 10 critic, 50 user reviews). An LLM call is made only for a review list whose hash
+changed, so re-crawled games with no new reviews cost no LLM time. A local `gemma3:4b`
+takes about 10 to 25 seconds per summary.

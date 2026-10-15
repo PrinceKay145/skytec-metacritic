@@ -2,7 +2,8 @@
 
 Every hour this service picks 20 games from Metacritic that it hasn't processed yet that day,
 then adds them to its database or updates them. It stores the cover, platforms with Metascore
-and user score, developer, description and video link, and shows the games in a web UI.
+and user score, developer, description and video link, plus an LLM summary of what critics and
+players like and dislike, and shows the games in a web UI.
 
 Data comes from Metacritic's JSON backend, not HTML scraping. See
 [docs/metacritic-api.md](docs/metacritic-api.md).
@@ -33,3 +34,15 @@ All settings are environment variables, listed with defaults in [.env.example](.
   already processed that day.
 - A run that fails for one game or one platform logs the error in the run's `error_log` and
   carries on. Runs still marked "running" when the app starts are marked failed.
+
+## Review summaries
+
+For each game the crawler reads the latest critic reviews (10) and user reviews (50). It asks an
+LLM for up to five likes and five dislikes per source, and stores them with a hash of the
+reviews it used. The LLM is called again only when those reviews change.
+
+Any OpenAI-compatible chat API works, set through `LLM_BASE_URL`, `LLM_API_KEY` and `LLM_MODEL`.
+The default is a local [Ollama](https://ollama.com) with `gemma3:4b`
+(`ollama pull gemma3:4b`). Inside Docker, `localhost` is the container itself, so point
+`LLM_BASE_URL` at `http://host.docker.internal:11434/v1` or a hosted API. If the LLM is down, the game is still saved and the failure goes into
+the run's `error_log`.

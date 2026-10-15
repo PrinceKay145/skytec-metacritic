@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import httpx
 from sqlalchemy import func, select
@@ -6,7 +7,16 @@ from sqlalchemy import func, select
 from app.crawler import run_crawl
 from app.db import SessionLocal
 from app.metacritic import API_URL, BROWSE_PAGE_SIZE, MetacriticClient
-from app.models import CrawlPhase, CrawlState, Game, PlatformScore, RunStatus
+from app.models import (
+    CrawlPhase,
+    CrawlRun,
+    CrawlState,
+    Game,
+    PlatformScore,
+    ReviewSource,
+    ReviewSummary,
+    RunStatus,
+)
 from tests.helpers import load_fixture
 
 
@@ -22,6 +32,7 @@ class FakeMetacritic:
         self.new_releases = new_releases
         self.browse_pages = browse_pages
         self.failing = failing
+        self.reviews = {source: load_fixture(f"{source}_reviews") for source in ReviewSource}
 
     def __call__(self, request: httpx.Request) -> httpx.Response:
         path = request.url.path
@@ -35,6 +46,8 @@ class FakeMetacritic:
             return httpx.Response(200, json=finder(slugs))
         if path.endswith("/stats/web"):
             return httpx.Response(200, json=load_fixture(f"{path.split('/')[3]}_stats"))
+        if path.startswith("/reviews/"):
+            return httpx.Response(200, json=self.reviews[path.split("/")[3]])
         slug = path.split("/")[3]
         game = load_fixture("game")
         game["data"]["item"].update(slug=slug, title=slug.upper())
@@ -43,6 +56,21 @@ class FakeMetacritic:
     def client(self) -> MetacriticClient:
         http = httpx.Client(transport=httpx.MockTransport(self), base_url=API_URL)
         return MetacriticClient(http, delay=0, backoff=0)
+
+    def crawl(self, llm: "FakeLLM | None" = None, **kwargs: int) -> CrawlRun:
+        return run_crawl(self.client(), llm or FakeLLM(), **kwargs)
+
+
+class FakeLLM:
+    def __init__(self, fail: bool = False) -> None:
+        self.prompts: list[str] = []
+        self.fail = fail
+
+    def complete_json(self, system: str, prompt: str) -> dict[str, Any]:
+        self.prompts.append(prompt)
+        if self.fail:
+            raise RuntimeError("LLM unavailable")
+        return {"likes": ["Combat"], "dislikes": ["Camera"]}
 
 
 def finder(slugs: list[str]) -> dict:
@@ -70,20 +98,20 @@ def test_first_runs_take_new_releases_then_page_through_browse() -> None:
         browse_pages=[["c", "d", "e", "f"], ["g", "h", "a", "i", "j", "k"]],
     )
 
-    first = run_crawl(fake.client(), limit=5)
+    first = fake.crawl(limit=5)
     assert (first.status, first.processed, first.errors) == (RunStatus.success, 5, 0)
     assert game_slugs() == ["a", "b", "c", "d", "e"]
     state = today_state()
     assert (state.phase, state.next_page) == (CrawlPhase.browse, 1)
 
-    second = run_crawl(fake.client(), limit=5)
+    second = fake.crawl(limit=5)
     assert second.processed == 5
     assert game_slugs() == ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]
     assert today_state().next_page == 2
 
 
 def test_game_details_and_scores_are_saved() -> None:
-    run_crawl(FakeMetacritic(["elden-ring"], []).client(), limit=1)
+    FakeMetacritic(["elden-ring"], []).crawl(limit=1)
 
     with SessionLocal() as session:
         game = session.scalars(select(Game)).one()
@@ -96,7 +124,7 @@ def test_game_details_and_scores_are_saved() -> None:
 
 def test_new_day_starts_over_and_updates_existing_games() -> None:
     fake = FakeMetacritic(new_releases=["a", "b"], browse_pages=[])
-    run_crawl(fake.client(), limit=2)
+    fake.crawl(limit=2)
     with SessionLocal() as session:
         state = today_state()
         session.delete(session.get(CrawlState, state.date))
@@ -110,7 +138,7 @@ def test_new_day_starts_over_and_updates_existing_games() -> None:
         )
         session.commit()
 
-    run = run_crawl(fake.client(), limit=2)
+    run = fake.crawl(limit=2)
 
     assert run.processed == 2
     assert game_slugs() == ["a", "b"]
@@ -131,7 +159,7 @@ def test_failed_game_and_platform_are_logged_and_skipped() -> None:
         ),
     )
 
-    run = run_crawl(fake.client(), limit=3)
+    run = fake.crawl(limit=3)
 
     assert (run.status, run.processed, run.errors) == (RunStatus.success, 2, 2)
     assert [(e["source"], e["url"]) for e in run.error_log] == [
@@ -151,7 +179,7 @@ def test_failed_game_and_platform_are_logged_and_skipped() -> None:
 def test_page_cap_stops_paging_and_is_logged() -> None:
     fake = FakeMetacritic(new_releases=["a"], browse_pages=[["a"]] * 50)
 
-    run = run_crawl(fake.client(), limit=5, max_pages=3)
+    run = fake.crawl(limit=5, max_pages=3)
 
     assert (run.status, run.processed, run.errors) == (RunStatus.success, 1, 1)
     assert run.error_log[0]["source"] == "browse"
@@ -159,15 +187,84 @@ def test_page_cap_stops_paging_and_is_logged() -> None:
 
 
 def test_end_of_catalog_stops_without_error() -> None:
-    run = run_crawl(FakeMetacritic(["a"], [["b"]]).client(), limit=5)
+    run = FakeMetacritic(["a"], [["b"]]).crawl(limit=5)
     assert (run.processed, run.errors) == (2, 0)
 
 
 def test_listing_failure_fails_the_run() -> None:
     fake = FakeMetacritic([], [], failing=frozenset({"/finder/metacritic/web"}))
 
-    run = run_crawl(fake.client())
+    run = fake.crawl()
 
     assert run.status == RunStatus.failed
     assert run.error_log[0]["source"] == "run"
     assert today_state().phase == CrawlPhase.new_releases
+
+
+def forget_today() -> None:
+    with SessionLocal() as session:
+        session.delete(session.get_one(CrawlState, datetime.now(UTC).date()))
+        session.commit()
+
+
+def summary_count() -> int:
+    with SessionLocal() as session:
+        return session.scalar(select(func.count()).select_from(ReviewSummary)) or 0
+
+
+def test_reviews_are_summarized_per_source() -> None:
+    llm = FakeLLM()
+    FakeMetacritic(["elden-ring"], []).crawl(llm, limit=1)
+
+    assert len(llm.prompts) == 2
+    assert llm.prompts[0].startswith("Game: ELDEN-RING\nCritic reviews:\n- (score 100)")
+    with SessionLocal() as session:
+        summaries = {s.source: s for s in session.scalars(select(ReviewSummary))}
+        assert set(summaries) == {ReviewSource.critic, ReviewSource.user}
+        assert (summaries[ReviewSource.user].likes, summaries[ReviewSource.user].dislikes) == (
+            "Combat",
+            "Camera",
+        )
+        assert len(summaries[ReviewSource.critic].reviews_hash) == 64
+
+
+def test_summaries_refresh_only_when_reviews_change() -> None:
+    fake = FakeMetacritic(["a"], [])
+    fake.crawl(FakeLLM(), limit=1)
+
+    forget_today()
+    unchanged = FakeLLM()
+    fake.crawl(unchanged, limit=1)
+    assert unchanged.prompts == []
+
+    forget_today()
+    fake.reviews[ReviewSource.user]["data"]["items"][0]["quote"] = "Edited review"
+    changed = FakeLLM()
+    fake.crawl(changed, limit=1)
+    assert len(changed.prompts) == 1
+    assert "User reviews" in changed.prompts[0]
+    assert summary_count() == 2
+
+
+def test_llm_failure_keeps_the_game_and_logs_errors() -> None:
+    run = FakeMetacritic(["a"], []).crawl(FakeLLM(fail=True), limit=1)
+
+    assert (run.status, run.processed, run.errors) == (RunStatus.success, 1, 2)
+    assert [e["url"] for e in run.error_log] == [
+        "https://www.metacritic.com/game/a/critic-reviews/",
+        "https://www.metacritic.com/game/a/user-reviews/",
+    ]
+    assert game_slugs() == ["a"]
+    assert summary_count() == 0
+
+
+def test_games_without_reviews_get_no_summary() -> None:
+    fake = FakeMetacritic(["a"], [])
+    for payload in fake.reviews.values():
+        payload["data"]["items"] = []
+    llm = FakeLLM()
+
+    fake.crawl(llm, limit=1)
+
+    assert llm.prompts == []
+    assert summary_count() == 0

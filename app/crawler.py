@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.db import SessionLocal
+from app.llm import LLM, OpenAICompatibleLLM
 from app.metacritic import API_URL, GameDetails, MetacriticClient
 from app.models import (
     CrawlPhase,
@@ -15,9 +16,11 @@ from app.models import (
     Game,
     PlatformScore,
     ReviewSource,
+    ReviewSummary,
     RunStatus,
     utcnow,
 )
+from app.summaries import reviews_hash, summarize
 
 BROWSE_URL = "https://www.metacritic.com/browse/game/all/all/all-time/new/"
 
@@ -26,6 +29,7 @@ log = logging.getLogger(__name__)
 
 def run_crawl(
     client: MetacriticClient | None = None,
+    llm: LLM | None = None,
     limit: int = settings.games_per_run,
     max_pages: int = settings.max_pages_per_run,
 ) -> CrawlRun:
@@ -35,7 +39,7 @@ def run_crawl(
         session.commit()
         log.info("crawl run %s started", run.id)
         try:
-            _crawl(session, metacritic, run, limit, max_pages)
+            _crawl(session, metacritic, llm or OpenAICompatibleLLM(), run, limit, max_pages)
             run.status = RunStatus.success
         except Exception as exc:
             log.exception("crawl run %s failed", run.id)
@@ -64,7 +68,12 @@ def fail_stale_runs() -> int:
 
 
 def _crawl(
-    session: Session, metacritic: MetacriticClient, run: CrawlRun, limit: int, max_pages: int
+    session: Session,
+    metacritic: MetacriticClient,
+    llm: LLM,
+    run: CrawlRun,
+    limit: int,
+    max_pages: int,
 ) -> None:
     today = datetime.now(UTC).date()
     state = session.get(CrawlState, today)
@@ -76,7 +85,8 @@ def _crawl(
     slugs, phase, next_page = _pick_slugs(metacritic, run, state, limit, max_pages)
     for slug in slugs:
         try:
-            _upsert(session, metacritic, run, metacritic.game(slug))
+            game = _upsert(session, metacritic, run, metacritic.game(slug))
+            _summarize(metacritic, llm, run, game)
             run.processed += 1
         except Exception as exc:
             log.warning("skipping game %s: %s", slug, exc)
@@ -124,7 +134,7 @@ def _pick_slugs(
 
 def _upsert(
     session: Session, metacritic: MetacriticClient, run: CrawlRun, details: GameDetails
-) -> None:
+) -> Game:
     game = session.scalar(select(Game).where(Game.slug == details.slug)) or Game(slug=details.slug)
     game.title = details.title
     game.description = details.description
@@ -149,6 +159,30 @@ def _upsert(
             game.scores.append(score)
         score.metascore = None if metascore is None else int(metascore)
         score.userscore = userscore
+    return game
+
+
+def _summarize(metacritic: MetacriticClient, llm: LLM, run: CrawlRun, game: Game) -> None:
+    summaries = {summary.source: summary for summary in game.summaries}
+    for source in ReviewSource:
+        current = summaries.get(source)
+        try:
+            reviews = metacritic.reviews(game.slug, source)
+            digest = reviews_hash(reviews)
+            if not reviews or (current and current.reviews_hash == digest):
+                continue
+            summary = summarize(llm, game.title, source, reviews)
+        except Exception as exc:
+            log.warning("skipping %s review summary for %s: %s", source, game.slug, exc)
+            fallback = f"https://www.metacritic.com/game/{game.slug}/{source}-reviews/"
+            run.record_error("summary", _url(exc, fallback), _describe(exc))
+            continue
+        if current is None:
+            current = ReviewSummary(source=source)
+            game.summaries.append(current)
+        current.likes = "\n".join(summary.likes)
+        current.dislikes = "\n".join(summary.dislikes)
+        current.reviews_hash = digest
 
 
 def _url(exc: Exception, fallback: str) -> str:
