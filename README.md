@@ -1,5 +1,13 @@
 # Metacritic games crawler
 
+**Live demo: <https://p01--metacritic--l6tcpp2w27x4.code.run>**. The crawler monitor is at
+[/monitor](https://p01--metacritic--l6tcpp2w27x4.code.run/monitor).
+
+It runs on Northflank's free tier (London) with a managed PostgreSQL. Summaries and embeddings
+come from OpenRouter, and the crawl runs hourly inside the app. On the public site **Run now**
+needs the admin token. To run everything on your own machine, follow the
+[demo walkthrough](#demo-walkthrough) (Docker) or [local development](#local-development).
+
 Every hour this service picks 20 games from Metacritic that it hasn't processed yet that day,
 then adds them to its database or updates them. For each game it stores the cover, platforms
 with Metascore and user score, developer, description and video link. It also stores an LLM
@@ -164,6 +172,22 @@ The `/api/runs` routes return an HTML fragment when htmx calls them. Unknown pag
 changing a model, generate a migration with
 `uv run alembic revision --autogenerate -m "describe the change"`. A database created before
 migrations existed and matching the models can be marked current with `uv run alembic stamp head`.
+
+## Deployment (the live demo)
+
+The live demo runs the same Docker image on [Northflank](https://northflank.com)'s free
+Developer Sandbox, Europe West region:
+
+- **Service:** built from this repository's `Dockerfile` on every push to `main`, running on
+  the free `nf-compute-10` size (0.1 vCPU, 256 MB), with port 8000 public.
+- **PostgreSQL addon:** private, TLS. Its `POSTGRES_URI` reaches the app as `DATABASE_URL`
+  through a secret group. The app accepts `postgres://` and `postgresql://` URLs as handed out.
+- **Secret group (runtime):** `LLM_BASE_URL=https://openrouter.ai/api/v1`,
+  `LLM_MODEL=google/gemma-3-4b-it`, `EMBED_MODEL=openai/text-embedding-3-small`,
+  `LLM_DAILY_CALL_LIMIT=400`, plus the secrets `LLM_API_KEY` and `ADMIN_TOKEN`.
+
+Migrations run when the container starts. After a redeploy, the next crawl waits until an hour
+has passed since the last one.
 
 ## Local development
 
