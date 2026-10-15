@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+{% if games %}
+<ul>
+  {% for game in games %}
+  <li>{{ game.title }}{% if game.developer %} — {{ game.developer }}{% endif %}</li>
+  {% endfor %}
+</ul>
+{% else %}
+<p>No games yet.</p>
+{% endif %}
+{% endblock %}
