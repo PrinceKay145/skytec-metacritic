@@ -36,6 +36,8 @@ services:
   ollama:
     image: ollama/ollama:0.35.0
     profiles: [ollama]
+    # a real PID 1 passes the stop signal on, so stopping doesn't wait 10 s and then kill
+    init: true
     entrypoint: ["/bin/sh", "-c"]
     command:
       - >-

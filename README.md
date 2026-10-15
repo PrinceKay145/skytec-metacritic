@@ -28,7 +28,9 @@ and records progress and errors on its `crawl_runs` row. The monitor page reads 
 
 ## Demo walkthrough
 
-Needs Docker. With the bundled Ollama, give Docker about 8 GB of memory.
+Needs Docker. With the bundled Ollama, give Docker at least 8 GB of memory, 12 GB to be safe.
+`gemma3:4b` on the CPU peaks near 7 GB. In an 8 GB Docker the kernel killed the model once
+during a 20-game run. The crawler retried the call, and the run still finished with no errors.
 
 **1. Start everything.**
 
@@ -50,8 +52,8 @@ instead: run `ollama pull gemma3:4b && ollama pull nomic-embed-text`, set
 **2. Watch the first crawl.** Open <http://localhost:8000/monitor>. Run #1 started when the app
 booted. Every 3 seconds the panel shows its status, games processed (up to 20), the error count
 with the last errors, and when the next scheduled run is due. A 20-game run took about
-6 minutes with Ollama running natively on a Mac. It is slower with CPU-only Ollama in Docker,
-and faster with a hosted API.
+6 minutes with Ollama running natively on a Mac, and about 19 minutes with the bundled CPU-only
+Ollama in Docker. A hosted API is faster still.
 
 **3. Browse the catalog.** Open <http://localhost:8000>. Today's 20 New Releases are listed.
 - Type in the search box: the list filters as you type.
@@ -88,11 +90,13 @@ docker compose exec db psql -U metacritic -c \
 Today's row is in the `browse` phase and lists every slug processed so far. Slugs listed there
 are skipped until the next UTC day, when the cycle starts over with New Releases.
 
-**7. See a failure handled.** Run `docker compose stop ollama`, then press **Run now**. The games
-are still saved, and the monitor lists the summary and embedding errors under the run. Run
-`docker compose start ollama` afterwards.
+**7. See a failure handled.** Once run #2 has finished, run `docker compose stop ollama` and
+press **Run now**. The games are still saved, and the monitor lists the summary and embedding
+errors under the run. Games that have no reviews yet need no summary, so expect only a few
+errors. Run `docker compose start ollama` afterwards.
 
-**8. Stop.** `docker compose down` keeps the data; `docker compose down -v` wipes it.
+**8. Stop.** `docker compose --profile ollama down` keeps the data and the downloaded models;
+add `-v` to wipe both. Without `--profile ollama`, Compose leaves the Ollama container running.
 
 ## Configuration
 
