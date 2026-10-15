@@ -18,7 +18,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.config import settings
 from app.crawler import claim_run, fail_stale_runs, run_crawl
-from app.db import Base, engine, get_session
+from app.db import get_session, migrate
 from app.models import CrawlRun, CrawlState, Game, PlatformScore, ReviewSource, RunStatus
 from app.similar import similar_games
 
@@ -39,8 +39,7 @@ RECENT_RUNS = 15
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    # shortcut: create_all never alters tables, move to alembic once a deployed schema changes
-    Base.metadata.create_all(engine)
+    migrate()
     fail_stale_runs()
     scheduler = BackgroundScheduler()
     app.state.scheduler = scheduler

@@ -13,11 +13,15 @@ os.environ["LLM_BASE_URL"] = "http://llm.invalid/v1"
 
 @pytest.fixture(autouse=True)
 def fresh_db() -> None:
-    from app.db import engine
+    from alembic import command
+
+    from app.db import alembic_config, engine
     from app.models import Base  # importing models registers every table on Base
 
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
+    # marks the fresh schema as migrated, so app startup's upgrade is a no-op
+    command.stamp(alembic_config(), "head")
 
 
 @pytest.fixture

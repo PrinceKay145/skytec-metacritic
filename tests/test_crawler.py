@@ -4,6 +4,7 @@ from typing import Any
 import httpx
 import pytest
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 
 from app.crawler import claim_run, run_crawl
 from app.db import SessionLocal
@@ -339,3 +340,10 @@ def test_only_one_run_can_hold_the_running_lock() -> None:
     assert run is not None
     assert (run.id, run.status, run.processed) == (first, RunStatus.success, 1)
     assert claim_run() is not None
+
+
+def test_database_rejects_a_second_running_row() -> None:
+    with SessionLocal() as session:
+        session.add_all([CrawlRun(status=RunStatus.running), CrawlRun(status=RunStatus.running)])
+        with pytest.raises(IntegrityError):
+            session.commit()

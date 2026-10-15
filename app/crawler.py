@@ -32,6 +32,9 @@ log = logging.getLogger(__name__)
 def claim_run() -> int | None:
     """Inserts this run's "running" row, or returns None while another run holds it."""
     with SessionLocal() as session:
+        # the unique index is the guarantee; this check only saves PostgreSQL a sequence value
+        if session.scalar(select(CrawlRun.id).where(CrawlRun.status == RunStatus.running)):
+            return None
         run = CrawlRun(status=RunStatus.running)
         session.add(run)
         try:
@@ -238,10 +241,10 @@ def _describe(exc: Exception) -> str:
 
 
 if __name__ == "__main__":
-    from app.db import Base, engine
+    from app.db import migrate
 
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
     )
-    Base.metadata.create_all(engine)
+    migrate()
     run_crawl()

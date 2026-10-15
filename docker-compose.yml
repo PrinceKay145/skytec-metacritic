@@ -19,11 +19,40 @@ services:
         required: false
     environment:
       DATABASE_URL: postgresql+psycopg://metacritic:${POSTGRES_PASSWORD:-metacritic}@db:5432/metacritic
+      # unset in .env: the ollama service below; set it there for a hosted API or the host's Ollama
+      LLM_BASE_URL: ${LLM_BASE_URL:-http://ollama:11434/v1}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
+      ollama:
+        condition: service_healthy
+        required: false
+
+  # optional local LLM: docker compose --profile ollama up
+  ollama:
+    image: ollama/ollama:0.35.0
+    profiles: [ollama]
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        ollama serve &
+        until ollama list > /dev/null 2>&1; do sleep 1; done;
+        ollama pull ${LLM_MODEL:-gemma3:4b} &&
+        ollama pull ${EMBED_MODEL:-nomic-embed-text} &&
+        touch /tmp/models-ready;
+        wait
+    volumes:
+      - ollama:/root/.ollama
+    healthcheck:
+      # healthy only once both models are pulled, so the first crawl can summarize
+      test: ["CMD", "test", "-f", "/tmp/models-ready"]
+      interval: 10s
+      retries: 360
 
 volumes:
   pgdata:
+  ollama:
