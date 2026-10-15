@@ -2,7 +2,18 @@
 {% block title %}Monitor · Metacritic games{% endblock %}
 {% block content %}
 <h1>Crawler monitor</h1>
-<p class="muted">{{ games_total }} games in the catalog, {{ games_today }} processed today (UTC).</p>
+<p class="muted">{{ games_total }} games in the catalog, {{ games_today }} processed today (UTC), {{ llm_calls_today }} of {{ llm_limit }} daily LLM calls used.</p>
+{% if admin_required and not can_run %}
+<details class="admin"{% if unlock_failed %} open{% endif %}>
+  <summary>Run now needs the admin token</summary>
+  <form method="post" action="/monitor/unlock">
+    <label>Admin token <input type="password" name="token" autocomplete="current-password" required></label>
+    <button type="submit">Unlock</button>
+  </form>
+  {% if unlock_failed %}<p class="note">That token didn't match.</p>{% endif %}
+</details>
+<p class="muted small">Crawls run on their own every hour.</p>
+{% endif %}
 
 <h2>Latest run</h2>
 <section id="latest" aria-live="polite" hx-get="/api/runs/latest" hx-trigger="every 3s">

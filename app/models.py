@@ -105,6 +105,7 @@ class CrawlRun(Base):
     status: Mapped[RunStatus] = mapped_column(default=RunStatus.running)
     processed: Mapped[int] = mapped_column(default=0)
     errors: Mapped[int] = mapped_column(default=0)
+    llm_calls: Mapped[int] = mapped_column(default=0)
     error_log: Mapped[list[dict[str, str]]] = mapped_column(
         MutableList.as_mutable(JSON), default=list
     )

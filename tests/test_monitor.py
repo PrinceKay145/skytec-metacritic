@@ -102,3 +102,44 @@ def test_run_now_button_is_disabled_while_a_run_is_going(client: TestClient) -> 
     add_run(RunStatus.running)
     fragment = client.get("/api/runs/latest", headers=HTMX).text
     assert "disabled" in fragment and "Running…" in fragment
+
+
+def test_admin_token_guards_run_now(
+    client: TestClient, started: list[int], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(main.settings, "admin_token", "s3cret")
+
+    assert client.post("/api/runs").status_code == 403
+    assert client.post("/api/runs", headers={"X-Admin-Token": "wrong"}).status_code == 403
+    non_ascii = {"X-Admin-Token": "ünïcode".encode()}
+    assert client.post("/api/runs", headers=non_ascii).status_code == 403
+    page = client.get("/monitor").text
+    assert 'hx-post="/api/runs"' not in page
+    assert 'action="/monitor/unlock"' in page
+
+    wrong = client.post("/monitor/unlock", data={"token": "nope"}, follow_redirects=False)
+    assert wrong.headers["location"] == "/monitor?unlock=failed"
+    assert "didn't match" in client.get(wrong.headers["location"]).text
+    assert started == []
+
+    by_header = client.post("/api/runs", headers={"X-Admin-Token": "s3cret"})
+    assert by_header.status_code == 202
+    with SessionLocal() as session:
+        session.get_one(CrawlRun, by_header.json()["run_id"]).status = RunStatus.success
+        session.commit()
+
+    unlocked = client.post("/monitor/unlock", data={"token": "s3cret"}, follow_redirects=False)
+    assert unlocked.status_code == 303
+    assert "httponly" in unlocked.headers["set-cookie"].lower()
+    assert "samesite=strict" in unlocked.headers["set-cookie"].lower()
+    assert 'hx-post="/api/runs"' in client.get("/monitor").text
+    assert client.post("/api/runs").status_code == 202
+
+
+def test_monitor_shows_daily_llm_usage(client: TestClient) -> None:
+    with SessionLocal() as session:
+        session.add(CrawlRun(status=RunStatus.success, llm_calls=7))
+        session.commit()
+
+    assert "7 of 400 daily LLM calls used" in client.get("/monitor").text
+    assert client.get("/api/runs/latest").json()["llm_calls"] == 7

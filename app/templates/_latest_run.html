@@ -1,10 +1,12 @@
 {% set running = run and run.status == "running" %}
+{% if can_run %}
 <div class="run-actions">
   <form method="post" action="/api/runs" hx-post="/api/runs" hx-target="#latest">
     <button type="submit"{% if running %} disabled{% endif %}>{{ "Running…" if running else "Run now" }}</button>
   </form>
   {% if note %}<span class="note">{{ note }}</span>{% endif %}
 </div>
+{% endif %}
 {% if run %}
 <p class="run-head">
   <span class="status status-{{ run.status }}">{{ run.status }}</span>

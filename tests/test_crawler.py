@@ -6,6 +6,7 @@ import pytest
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
+from app import crawler
 from app.crawler import claim_run, run_crawl
 from app.db import SessionLocal
 from app.metacritic import API_URL, BROWSE_PAGE_SIZE, MetacriticClient
@@ -347,3 +348,40 @@ def test_database_rejects_a_second_running_row() -> None:
         session.add_all([CrawlRun(status=RunStatus.running), CrawlRun(status=RunStatus.running)])
         with pytest.raises(IntegrityError):
             session.commit()
+
+
+def test_daily_llm_call_limit_skips_summaries(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(crawler.settings, "llm_daily_call_limit", 3)
+    llm = FakeLLM()
+
+    run = FakeMetacritic(["a", "b", "c"], []).crawl(llm, limit=3)
+
+    assert run is not None
+    assert (run.processed, run.llm_calls, len(llm.prompts)) == (3, 3, 3)
+    assert [e["source"] for e in run.error_log] == ["llm-limit"]
+    assert summary_count() == 3
+
+    forget_today()
+    later = FakeLLM()
+    second = FakeMetacritic(["d"], []).crawl(later, limit=1)
+    assert second is not None
+    assert later.prompts == []
+    assert second.error_log[0]["source"] == "llm-limit"
+
+
+def test_backfill_embeds_games_from_another_model(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(crawler, "BACKFILL_LIMIT", 1)
+    with SessionLocal() as session:
+        for slug in ("old-1", "old-2"):
+            game = Game(slug=slug, title=slug, embedding=b"\0\0\0\0")
+            game.embedding_model = "old-model"
+            session.add(game)
+        session.commit()
+
+    llm = FakeLLM()
+    FakeMetacritic(["a"], []).crawl(llm, limit=1)
+
+    with SessionLocal() as session:
+        models = dict(session.execute(select(Game.slug, Game.embedding_model)).all())
+    assert models == {"a": "fake-embed", "old-1": "fake-embed", "old-2": "old-model"}
+    assert len(llm.embedded) == 2

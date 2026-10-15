@@ -113,6 +113,8 @@ is in [.env.example](.env.example).
 | `LLM_BASE_URL` | local Ollama | Any OpenAI-compatible API (`/chat/completions`, `/embeddings`) |
 | `LLM_MODEL`, `EMBED_MODEL` | `gemma3:4b`, `nomic-embed-text` | Models for summaries and similar games |
 | `SCHEDULER_ENABLED` | `true` | Turn off the hourly runs; Run now still works |
+| `ADMIN_TOKEN` | empty | When set, **Run now** and `POST /api/runs` need it (`X-Admin-Token` header, or unlock once on `/monitor`) |
+| `LLM_DAILY_CALL_LIMIT` | `400` | Summary calls per UTC day across all runs; past it, summaries wait for the next day |
 
 ## How it works
 
@@ -132,12 +134,14 @@ is in [.env.example](.env.example).
 **Review summaries.** For each game the crawler reads the latest critic reviews (10) and user
 reviews (50). It asks the LLM for up to five likes and five dislikes per source, and stores them
 with a hash of the reviews. The LLM is called again only when the reviews change. A failed LLM
-call is retried once.
+call is retried once. `LLM_DAILY_CALL_LIMIT` caps the calls per UTC day; past it the run logs
+one `llm-limit` entry and saves games without new summaries. The monitor shows the day's count.
 
 **Similar games.** Each game gets an embedding of its title, genres, description and the "likes"
 from its review summaries, from the provider's `/embeddings` endpoint. The vector is stored with
 the model name and a hash of that text, so it is recomputed only when the text or the model
-changes. The card ranks other games by cosine similarity. A shared developer adds 0.05 and
+changes. After switching `EMBED_MODEL`, each run re-embeds up to 50 games that still have
+vectors from the old model. The card ranks other games by cosine similarity. A shared developer adds 0.05 and
 shared platforms add up to 0.03, which breaks near-ties without overriding the content match. If
 the embed model is unavailable, the run logs it once and skips embeddings, and cards without a
 vector hide the similar games block.
@@ -150,7 +154,7 @@ vector hide the similar games block.
 | `/games/{slug}` | Game card |
 | `/monitor` | Crawler monitor, polling `/api/runs/latest` every 3 seconds via htmx |
 | `GET /api/runs/latest` | Latest run as JSON: `id`, `status`, `processed`, `errors`, `error_log`, times. 404 before the first run |
-| `POST /api/runs` | Starts a crawl in the background and returns `202 {"run_id": N}` at once, or `409` with the running run's id |
+| `POST /api/runs` | Starts a crawl in the background and returns `202 {"run_id": N}` at once, `409` with the running run's id, or `403` without the admin token when `ADMIN_TOKEN` is set |
 | `GET /health` | `{"status": "ok"}` once the database answers |
 
 The `/api/runs` routes return an HTML fragment when htmx calls them. Unknown pages get an HTML

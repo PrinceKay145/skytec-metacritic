@@ -1,10 +1,12 @@
 import logging
+import secrets
 import threading
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated, Any, Literal
+from urllib.parse import parse_qs
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
@@ -17,7 +19,7 @@ from sqlalchemy.orm import Session, selectinload
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.config import settings
-from app.crawler import claim_run, fail_stale_runs, run_crawl
+from app.crawler import claim_run, fail_stale_runs, llm_calls_today, run_crawl
 from app.db import get_session, migrate
 from app.models import CrawlRun, CrawlState, Game, PlatformScore, ReviewSource, RunStatus
 from app.similar import similar_games
@@ -35,6 +37,7 @@ SORT_LABELS: dict[Sort, str] = {
     "title": "Title",
 }
 RECENT_RUNS = 15
+ADMIN_COOKIE = "admin_token"
 
 
 @asynccontextmanager
@@ -166,6 +169,10 @@ def monitor(request: Request, session: SessionDep) -> HTMLResponse:
         ).all(),
         "games_total": session.scalar(select(func.count()).select_from(Game)),
         "games_today": len(today.processed_slugs) if today else 0,
+        "admin_required": bool(settings.admin_token),
+        "unlock_failed": request.query_params.get("unlock") == "failed",
+        "llm_calls_today": llm_calls_today(session),
+        "llm_limit": settings.llm_daily_call_limit,
     }
     return templates.TemplateResponse(request, "monitor.html", context)
 
@@ -185,6 +192,8 @@ def latest_run(request: Request, session: SessionDep) -> Response:
 @app.post("/api/runs")
 def start_run(request: Request, session: SessionDep) -> Response:
     """Claims the run and returns its id at once; the crawl itself runs in a background thread."""
+    if not _is_admin(request):
+        return JSONResponse({"detail": "Starting a crawl needs the admin token"}, status_code=403)
     run_id = claim_run()
     if run_id is not None:
         threading.Thread(
@@ -203,6 +212,30 @@ def start_run(request: Request, session: SessionDep) -> Response:
     return JSONResponse({"run_id": run_id}, status_code=202)
 
 
+@app.post("/monitor/unlock")
+async def unlock_run_now(request: Request) -> RedirectResponse:
+    token = parse_qs((await request.body()).decode()).get("token", [""])[0]
+    if not settings.admin_token or not _token_matches(token):
+        return RedirectResponse("/monitor?unlock=failed", status_code=303)
+    response = RedirectResponse("/monitor", status_code=303)
+    https = request.headers.get("x-forwarded-proto", request.url.scheme) == "https"
+    response.set_cookie(
+        ADMIN_COOKIE, token, max_age=30 * 24 * 3600, httponly=True, samesite="strict", secure=https
+    )
+    return response
+
+
+def _is_admin(request: Request) -> bool:
+    if not settings.admin_token:
+        return True
+    supplied = request.headers.get("X-Admin-Token") or request.cookies.get(ADMIN_COOKIE) or ""
+    return _token_matches(supplied)
+
+
+def _token_matches(supplied: str) -> bool:
+    return secrets.compare_digest(supplied.encode(), settings.admin_token.encode())
+
+
 def _latest_run(session: Session) -> CrawlRun | None:
     return session.scalar(select(CrawlRun).order_by(CrawlRun.id.desc()).limit(1))
 
@@ -211,7 +244,12 @@ def _latest_context(request: Request, session: Session) -> dict[str, Any]:
     scheduler: BackgroundScheduler = request.app.state.scheduler
     job = scheduler.get_job("crawl") if scheduler.running else None
     next_run = job.next_run_time.astimezone(UTC) if job and job.next_run_time else None
-    return {"run": _latest_run(session), "next_run": next_run, "note": None}
+    return {
+        "run": _latest_run(session),
+        "next_run": next_run,
+        "note": None,
+        "can_run": _is_admin(request),
+    }
 
 
 def _run_json(run: CrawlRun) -> dict[str, Any]:
@@ -222,5 +260,6 @@ def _run_json(run: CrawlRun) -> dict[str, Any]:
         "finished_at": run.finished_at,
         "processed": run.processed,
         "errors": run.errors,
+        "llm_calls": run.llm_calls,
         "error_log": run.error_log,
     }

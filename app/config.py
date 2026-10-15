@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     max_pages_per_run: int = 10
     crawl_interval_minutes: int = 60
     scheduler_enabled: bool = True
+    # when set, starting a crawl by hand needs this token (header, or cookie from /monitor/unlock)
+    admin_token: str = ""
+    llm_daily_call_limit: int = 400
 
     # any OpenAI-compatible chat API; the default is a local Ollama
     llm_base_url: str = "http://localhost:11434/v1"

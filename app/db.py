@@ -11,6 +11,8 @@ from app.config import settings
 
 engine = create_engine(
     settings.database_url,
+    # hosted PostgreSQL (e.g. Neon) drops idle connections while its compute sleeps
+    pool_pre_ping=True,
     # FastAPI and the scheduler use sessions from worker threads
     connect_args={"check_same_thread": False} if settings.database_url.startswith("sqlite") else {},
 )

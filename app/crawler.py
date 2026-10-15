@@ -2,7 +2,7 @@ import logging
 from datetime import UTC, datetime
 
 import httpx
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -25,6 +25,8 @@ from app.similar import embedding_text, pack, text_hash
 from app.summaries import reviews_hash, summarize
 
 BROWSE_URL = "https://www.metacritic.com/browse/game/all/all/all-time/new/"
+# games re-embedded per run after an EMBED_MODEL change or an earlier embedding failure
+BACKFILL_LIMIT = 50
 
 log = logging.getLogger(__name__)
 
@@ -89,6 +91,16 @@ def fail_stale_runs() -> int:
         return len(stale)
 
 
+def llm_calls_today(session: Session) -> int:
+    midnight = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+    total = session.scalar(
+        select(func.coalesce(func.sum(CrawlRun.llm_calls), 0)).where(
+            CrawlRun.started_at >= midnight
+        )
+    )
+    return int(total or 0)
+
+
 def _crawl(
     session: Session,
     metacritic: MetacriticClient,
@@ -106,10 +118,18 @@ def _crawl(
 
     slugs, phase, next_page = _pick_slugs(metacritic, run, state, limit, max_pages)
     embeddings_ok = True
+    llm_limit = settings.llm_daily_call_limit - llm_calls_today(session)
+    llm_limit_hit = False
     for slug in slugs:
         try:
             game = _upsert(session, metacritic, run, metacritic.game(slug))
-            _summarize(metacritic, llm, run, game)
+            if not llm_limit_hit and not _summarize(metacritic, llm, run, game, llm_limit):
+                llm_limit_hit = True
+                message = (
+                    f"daily limit of {settings.llm_daily_call_limit} LLM calls reached, "
+                    "summaries skipped until 00:00 UTC"
+                )
+                run.record_error("llm-limit", "", message)
             if embeddings_ok:
                 embeddings_ok = _embed(llm, run, game)
             run.processed += 1
@@ -123,6 +143,21 @@ def _crawl(
         session.commit()
     # the page pointer moves only after the games are saved, so a crash re-reads the same page
     state.phase, state.next_page = phase, next_page
+    if embeddings_ok:
+        _backfill_embeddings(session, llm, run)
+
+
+def _backfill_embeddings(session: Session, llm: LLM, run: CrawlRun) -> None:
+    stale = session.scalars(
+        select(Game)
+        .where(or_(Game.embedding_model.is_(None), Game.embedding_model != llm.embed_model))
+        .order_by(Game.id)
+        .limit(BACKFILL_LIMIT)
+    ).all()
+    for game in stale:
+        if not _embed(llm, run, game):
+            break
+        session.commit()
 
 
 def _pick_slugs(
@@ -188,7 +223,10 @@ def _upsert(
     return game
 
 
-def _summarize(metacritic: MetacriticClient, llm: LLM, run: CrawlRun, game: Game) -> None:
+def _summarize(
+    metacritic: MetacriticClient, llm: LLM, run: CrawlRun, game: Game, llm_limit: int
+) -> bool:
+    """Returns False once the daily LLM call budget is used up."""
     summaries = {summary.source: summary for summary in game.summaries}
     for source in ReviewSource:
         current = summaries.get(source)
@@ -197,6 +235,9 @@ def _summarize(metacritic: MetacriticClient, llm: LLM, run: CrawlRun, game: Game
             digest = reviews_hash(reviews)
             if not reviews or (current and current.reviews_hash == digest):
                 continue
+            if run.llm_calls >= llm_limit:
+                return False
+            run.llm_calls += 1
             summary = summarize(llm, game.title, source, reviews)
         except Exception as exc:
             log.warning("skipping %s review summary for %s: %s", source, game.slug, exc)
@@ -209,6 +250,7 @@ def _summarize(metacritic: MetacriticClient, llm: LLM, run: CrawlRun, game: Game
         current.likes = "\n".join(summary.likes)
         current.dislikes = "\n".join(summary.dislikes)
         current.reviews_hash = digest
+    return True
 
 
 def _embed(llm: LLM, run: CrawlRun, game: Game) -> bool:

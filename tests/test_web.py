@@ -152,3 +152,21 @@ def test_game_card_lists_similar_games_or_hides_the_block(
     block = html[html.index("Similar games") :]
     assert block.index('href="/games/hades"') < block.index('href="/games/tetris"')
     assert "Similar games" not in client.get("/games/lonely").text
+
+
+def test_long_titles_and_missing_data_still_render(client: TestClient) -> None:
+    long_title = "Supercalifragilistic" * 15
+    add_game("long", long_title, {})
+
+    listing = client.get("/").text
+    assert long_title in listing
+    assert '<div class="cover" aria-hidden="true"></div>' in listing
+    assert ">tbd<" in listing
+
+    card = client.get("/games/long").text
+    assert "Developer unknown" in card
+    assert "No platforms yet" in card
+    assert "No video" in card
+    assert "No critic reviews yet." in card and "No user reviews yet." in card
+    assert "Similar games" not in card
+    assert "No games match these filters." in client.get("/", params={"q": "zzz"}).text
